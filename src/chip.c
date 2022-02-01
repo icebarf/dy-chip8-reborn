@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,6 +102,8 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
 static int delay_timer_thread(void* arg)
 {
+    if(arg == NULL)
+        abort();
     struct state* state = (struct state*)arg;
 
     /* sleep for 17 milliseconds then continue - this is equivalent of
