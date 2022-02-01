@@ -106,10 +106,8 @@ static int delay_timer_thread(void* arg)
     struct state* state = (struct state*)arg;
 
     /* sleep for 17 milliseconds then continue - this is equivalent of
-     * running the loop at 60hz While not accounting for locking and unlocking
-     * mutexes, If the delay is changed the error range is too large Currently
-     * we're off by 1 i.e if delay timer is set to 60, when the thread exits
-     * after a minute the remaining value in delay timer is 1 */
+     * running the loop at 60hz ignoring the delay of function calls
+     */
     while (SDL_AtomicGet(&state->run)) {
         uint8_t is_zero = (SDL_AtomicGet(&state->chip8->delay_timer) == 0);
         if (!is_zero){
