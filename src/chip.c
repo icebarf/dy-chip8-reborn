@@ -1,8 +1,3 @@
-#include "SDL_atomic.h"
-#include "SDL_log.h"
-#include "SDL_mutex.h"
-#include "SDL_thread.h"
-#include "SDL_timer.h"
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -28,8 +23,8 @@ struct chip8_sys {
 
     uint16_t index;
     uint16_t program_counter;
-    uint8_t delay_timer;
-    uint8_t sound_timer;
+    SDL_atomic_t delay_timer;
+    SDL_atomic_t sound_timer;
 
     int stacktop;
 };
@@ -116,9 +111,9 @@ static int delay_timer_thread(void* arg)
      * we're off by 1 i.e if delay timer is set to 60, when the thread exits
      * after a minute the remaining value in delay timer is 1 */
     while (SDL_AtomicGet(&state->run)) {
-        if (SDL_LockMutex(state->mutexes[DELAY_TIMER]) == 0) {
-            state->chip8->delay_timer--;
-            SDL_UnlockMutex(state->mutexes[DELAY_TIMER]);
+        uint8_t is_zero = (SDL_AtomicGet(&state->chip8->delay_timer) == 0);
+        if (!is_zero){
+            SDL_AtomicDecRef(&state->chip8->delay_timer);
             SDL_Delay(17);
         }
     }
@@ -131,9 +126,9 @@ static int sound_timer_thread(void* arg)
     struct state* state = (struct state*)arg;
 
     while (SDL_AtomicGet(&state->run)) {
-        if (SDL_LockMutex(state->mutexes[SOUND_TIMER]) == 0) {
-            state->chip8->sound_timer--;
-            SDL_UnlockMutex(state->mutexes[SOUND_TIMER]);
+        uint8_t is_zero = (SDL_AtomicGet(&state->chip8->sound_timer) == 0);
+        if (!is_zero){
+            SDL_AtomicDecRef(&state->chip8->sound_timer);
             SDL_Delay(17);
         }
     }
@@ -153,8 +148,10 @@ int main(int argc, char* argv[])
 
     chip8.stacktop = -1;
     load_font(&chip8);
-    chip8.delay_timer = 60;
-    chip8.sound_timer = 60;
+
+    /* Testing code */
+    SDL_AtomicSet(&chip8.delay_timer, 60);
+    SDL_AtomicSet(&chip8.sound_timer, 60);
 
     /* fetchrom and do other stuff */
     int file_size = fetchrom(&chip8, argv[1]);
@@ -187,8 +184,10 @@ int main(int argc, char* argv[])
     }
 
     /* Testing stuff - pauses main thread for 1 second and then set run to false
+     * Interesting, both timers appear to be zeroed out on 1008ms not 1000s
+     * maybe its due to the delay of function calls
      */
-    SDL_Delay(1000);
+    SDL_Delay(1008);
     SDL_AtomicSet(&state.run, FALSE);
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
     SDL_WaitThread(st_thread, &st_thread_rtval);
@@ -196,8 +195,8 @@ int main(int argc, char* argv[])
     for (int i = 0; i < 3; i++)
         SDL_DestroyMutex(state.mutexes[i]);
 
-    printf("Delay timer: %d\n", chip8.delay_timer);
-    printf("Sound timer: %d\n", chip8.sound_timer);
+    printf("Delay timer: %d\n", SDL_AtomicGet(&chip8.delay_timer));
+    printf("Sound timer: %d\n", SDL_AtomicGet(&chip8.sound_timer));
 
     return 0;
 }
