@@ -1,16 +1,16 @@
 # Simple Makefile by rdseed (Amritpal Singh)
 # Will be used in future projects
-CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic
-BIN=bin
-TMP=tmp
+CC:=gcc
+CFLAGS+=-Wall -Wextra -Wpedantic
+BIN:=bin
+TMP:=tmp
 
 # Output file
-A.OUT=chip8-rb
-A.OUT_VER=0.0.2-alpha
+A.OUT:=chip8-rb
+VER:=0.0.2-alpha
 
 # Third Party Library Flags
-LIB=sdl2
+LIB:=sdl2
 PKGCONFIG=`pkg-config --libs --cflags $(LIB)`
 
 # Termbox - Statically Linked
@@ -19,7 +19,7 @@ termbox_o:=termbox.o
 termbox_h:=include/termbox2/termbox.h
 
 # Name of object files present under src
-OBJECTS=chip.o debugger.o helpers.o
+OBJECTS:=chip.o debugger.o helpers.o
 
 .DEFAULT_GOAL: all
 
@@ -32,7 +32,7 @@ TEMP:
 	$(CC) $(CFLAGS) -c $< -o $(TMP)/$@
 
 binary:
-	$(CC) $(CFLAGS) $(wildcard tmp/*.o) -o $(BIN)/$(A.OUT)-$(A.OUT_VER) $(PKGCONFIG)
+	$(CC) $(CFLAGS) $(wildcard tmp/*.o) -o $(BIN)/$(A.OUT)-$(VER) $(PKGCONFIG)
 
 # Termbox is statically linked
 termbox:
