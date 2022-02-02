@@ -22,12 +22,24 @@ and anything else that I may wish to do in the future.
 - [git](https://git-scm.com) - For termbox as a submodule
 - [make](https://www.gnu.org/software/make/) - Build system for the project
 - cc - A C Compiler usually GCC or Clang
-- [termbox2](https://github.com/termbox/termbox2) - Shipped in the include folder as submodule
+  
+No need to install the following as it is shipped with code
+
+- [termbox2](https://github.com/termbox/termbox2) - Terminal rendering library
 
 # Compiling
+
+Make sure that `sdl2`, `git`, `make` are installed on your machine.
+
+Install them using your distribution's package manager or compile from source from official website.
 
 1. Get a copy of the code - using `git clone` or Download Zip from GitHub.
 2. `cd` to the directory of code.
 3. `make`
 
 After following above three steps, you should have a file called `chip8-rb`.
+
+## Example
+
+The following pictures shows how the code was compiled, assuming that all dependencies were installed.
+![example_compile.png](img/example_compile.png)
