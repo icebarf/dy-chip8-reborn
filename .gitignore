@@ -2,3 +2,8 @@ build
 builddir
 .vscode
 .cache
+output.txt
+outfile.txt
+src/helpers*
+lib/termbox2/*
+chip
