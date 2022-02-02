@@ -1,34 +1,7 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include <SDL2/SDL.h>
-
-struct chip8_sys {
-
-    const enum constants {
-        MEMSIZE = 4096,
-        REGNUM = 16,
-        STACKSIZE = 48,
-        DISPLAY_SIZE = 64 * 32
-    } constants;
-
-    uint16_t memory[MEMSIZE];
-    uint16_t stack[STACKSIZE];
-    uint8_t registers[REGNUM];
-    uint8_t display[DISPLAY_SIZE];
-
-    uint16_t index;
-    uint16_t program_counter;
-    SDL_atomic_t delay_timer;
-    SDL_atomic_t sound_timer;
-
-    int stacktop;
-};
-
-enum RUN { FALSE, TRUE };
+#include "chip.h"
+#include "SDL_timer.h"
+#include "debugger.h"
+#include "helpers.h"
 
 enum MUTEX { DELAY_TIMER, SOUND_TIMER, DISPLAY };
 
@@ -38,6 +11,9 @@ struct state {
     SDL_atomic_t run;
 };
 
+/* loads the font to memory at address 0x0-0x50 (0 to 80) 
+ * the font is copied byte-by-byte
+ */
 static void load_font(struct chip8_sys* chip8)
 {
     enum sprite_count { sp_count = 80 };
@@ -64,6 +40,9 @@ static void load_font(struct chip8_sys* chip8)
     memcpy(&chip8->memory[0], &font[0], sp_count);
 }
 
+/* loads the specified rom to memory at adress 0x200 (512)
+ * returns the number of character that are read 
+ */
 static int fetchrom(struct chip8_sys* chip8, const char* name)
 {
     FILE* fp = fopen(name, "rb");
@@ -88,7 +67,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     }
 
     /* each chip8 instruction is two bytes long */
-    enum fread_param { inst_byte = 2 };
+    enum fread_param { inst_byte = 1 };
 
     if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) !=
         (unsigned long)(file_size / inst_byte)) {
@@ -100,9 +79,15 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     return file_size;
 }
 
+
+/* this function is supposed to run as a separate thread
+ * it receives an arg which is actually the state structure
+ * It continues to decrement the delay_timer until 0 and 
+ * then it stops decrementing - also exits when state->run is set to FALSE by main thread
+ */
 static int delay_timer_thread(void* arg)
 {
-    if(arg == NULL)
+    if (arg == NULL)
         abort();
     struct state* state = (struct state*)arg;
 
@@ -111,7 +96,7 @@ static int delay_timer_thread(void* arg)
      */
     while (SDL_AtomicGet(&state->run)) {
         uint8_t is_zero = (SDL_AtomicGet(&state->chip8->delay_timer) == 0);
-        if (!is_zero){
+        if (!is_zero) {
             SDL_AtomicDecRef(&state->chip8->delay_timer);
             SDL_Delay(17);
         }
@@ -120,13 +105,15 @@ static int delay_timer_thread(void* arg)
     return TRUE;
 }
 
+
+/* same as delay timer except it is for the sound timer */
 static int sound_timer_thread(void* arg)
 {
     struct state* state = (struct state*)arg;
 
     while (SDL_AtomicGet(&state->run)) {
         uint8_t is_zero = (SDL_AtomicGet(&state->chip8->sound_timer) == 0);
-        if (!is_zero){
+        if (!is_zero) {
             SDL_AtomicDecRef(&state->chip8->sound_timer);
             SDL_Delay(17);
         }
@@ -182,10 +169,12 @@ int main(int argc, char* argv[])
                      "Could not create timer threads: %s", SDL_GetError());
     }
 
-    /* Testing stuff - pauses main thread for 1 second and then set run to false
-     * Interesting, both timers appear to be zeroed out on 1008ms not 1000s
-     * maybe its due to the delay of function calls
-     */
+    /* Testing area below */
+
+    /* prints memory layout */
+//    print_program_memory(&chip8);
+
+    /* On exit */
     SDL_Delay(1008);
     SDL_AtomicSet(&state.run, FALSE);
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
@@ -194,8 +183,12 @@ int main(int argc, char* argv[])
     for (int i = 0; i < 3; i++)
         SDL_DestroyMutex(state.mutexes[i]);
 
+    /* print out whats left in the delay and sound timer*/
     printf("Delay timer: %d\n", SDL_AtomicGet(&chip8.delay_timer));
     printf("Sound timer: %d\n", SDL_AtomicGet(&chip8.sound_timer));
+
+    /* Debugger - Should be on another thread or... perhaps not. Pending design choice */
+    start_debugger(&chip8);
 
     return 0;
 }

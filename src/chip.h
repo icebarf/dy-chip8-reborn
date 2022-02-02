@@ -3,6 +3,9 @@
 
 #include <SDL2/SDL.h>
 
+enum RUN { FALSE, TRUE };
+
+/* The chip8 system */
 struct chip8_sys {
 
     const enum constants {
