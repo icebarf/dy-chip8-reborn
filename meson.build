@@ -4,4 +4,4 @@ project('chip8-rb', 'c',
 
 deps = [dependency('threads'), dependency('sdl2')]
 
-executable('chip8-rb', ['src/chip.c'], dependencies : deps)
+executable('chip8-rb', ['src/chip.c','src/helpers.c','src/debugger.c'], dependencies : deps)
