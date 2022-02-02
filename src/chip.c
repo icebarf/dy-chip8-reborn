@@ -1,5 +1,4 @@
 #include "chip.h"
-#include "SDL_timer.h"
 #include "debugger.h"
 #include "helpers.h"
 
