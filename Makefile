@@ -23,7 +23,7 @@ OBJECTS=chip.o debugger.o helpers.o
 
 .DEFAULT_GOAL: all
 
-all: TEMP $(OBJECTS) termbox binary clean
+all: TEMP termbox $(OBJECTS) binary clean
 
 TEMP:
 	mkdir -p $(TMP)
