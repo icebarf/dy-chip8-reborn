@@ -18,18 +18,16 @@ and anything else that I may wish to do in the future.
 
 # Dependencies
 
-- [SDL2](https://libsdl.org/) - Graphics Rendering and Threading Library
+- [sdl2](https://libsdl.org/) - Graphics Rendering and Threading Library
+- [git](https://git-scm.com) - For termbox as a submodule
+- [make](https://www.gnu.org/software/make/) - Build system for the project
 - cc - A C Compiler usually GCC or Clang
-- [ninja](https://ninja-build.org) - Backend used by meson
-- [meson](https://mesonbuild.com/) - The Build System
 - [termbox2](https://github.com/termbox/termbox2) - Shipped in the include folder as submodule
 
 # Compiling
 
 1. Get a copy of the code - using `git clone` or Download Zip from GitHub.
 2. `cd` to the directory of code.
-3. `git submodule init`
-4. `git submodule update`
-5. `meson compile -C build`
+3. `make`
 
 After following above three steps, you should have a file called `chip8-rb`.
