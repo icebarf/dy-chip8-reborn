@@ -34,8 +34,17 @@ Make sure that `sdl2`, `git`, `make` are installed on your machine.
 Install them using your distribution's package manager or compile from source from official website.
 
 1. Get a copy of the code - using `git clone` or Download Zip from GitHub.
-2. `cd` to the directory of code.
-3. `make`
+```sh
+$ git clone https://github.com/icebarf/dy-chip8-reborn
+
+$ cd dy-chip8-reborn
+
+$ chmod +x configure.sh
+
+$ ./configure.sh
+
+$ make
+```
 
 After following above three steps, you should have a file called `chip8-rb`.
 
