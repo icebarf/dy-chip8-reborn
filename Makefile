@@ -31,8 +31,6 @@ all: $(termbox_o) $(OBJECTS) binary clean
 
 # Termbox is statically linked
 $(termbox_o): $(termbox_h)
-	@git submodule init
-	@git submodule update
 	$(CC) -DTB_IMPL -DTB_OPT_TRUECOLOR -DTB_OPT_EGC -fPIC -xc -c $(termbox_cflags) $(termbox_h) -o $(termbox_o)
 
 %.o: $(SRC)/%.c
