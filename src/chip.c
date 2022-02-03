@@ -340,6 +340,7 @@ int main(int argc, char* argv[])
 
     chip8.stacktop = -1;
     load_font(&chip8);
+    chip8.program_counter = 0x200;
 
     /* Testing code */
     SDL_AtomicSet(&chip8.delay_timer, 60);
@@ -371,22 +372,23 @@ int main(int argc, char* argv[])
 
     SDL_Thread* st_thread =
         SDL_CreateThread(sound_timer_thread, "SoundTimerThread", (void*)&state);
-    if (dt_thread == NULL || st_thread == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Could not create timer threads: %s", SDL_GetError());
-    }
 
     SDL_Thread* emu_thread =
         SDL_CreateThread(emulator_thread, "EmuThread", (void*)&state);
+
+    if (dt_thread == NULL || st_thread == NULL || emu_thread == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Could not create threads: %s", SDL_GetError());
+    }
 
     /* On exit */
     SDL_Delay(1008);
     SDL_AtomicSet(&state.run, FALSE);
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
     SDL_WaitThread(st_thread, &st_thread_rtval);
+    SDL_WaitThread(emu_thread, &emu_thread_rtval);
 
-    for (int i = 0; i < 3; i++)
-        SDL_DestroyMutex(state.mutexes[i]);
+    SDL_DestroyMutex(state.mutexes[0]);
 
     /* print out whats left in the delay and sound timer*/
     printf("Delay timer: %d\n", SDL_AtomicGet(&chip8.delay_timer));
