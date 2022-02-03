@@ -51,4 +51,4 @@ After following above three steps, you should have a file called `chip8-rb`.
 ## Example
 
 The following pictures shows how the code was compiled, assuming that all dependencies were installed.
-![example_compile.png](img/example_compile.png)
+![ex_compile.png](img/ex_compile.png)
