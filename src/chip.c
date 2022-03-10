@@ -1,5 +1,4 @@
 #include "chip.h"
-#include "debugger.h"
 #include "helpers.h"
 #include <SDL2/SDL_log.h>
 #include <SDL2/SDL_thread.h>
@@ -393,10 +392,6 @@ int main(int argc, char* argv[])
     /* print out whats left in the delay and sound timer*/
     printf("Delay timer: %d\n", SDL_AtomicGet(&chip8.delay_timer));
     printf("Sound timer: %d\n", SDL_AtomicGet(&chip8.sound_timer));
-
-    /* Debugger - Should be on another thread or... perhaps not. Pending design
-     * choice */
-    start_debugger(&chip8);
 
     return 0;
 }

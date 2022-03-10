@@ -21,7 +21,7 @@ termbox_o := termbox.o
 termbox_h := include/termbox2/termbox.h
 
 # Name of files present under src in order they depend on each other
-OBJECTS := debugger.o helpers.o chip.o
+OBJECTS := helpers.o chip.o
 
 .PHONY: all binary clean
 
