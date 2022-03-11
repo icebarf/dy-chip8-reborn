@@ -23,3 +23,13 @@ void print_program_memory(struct chip8_sys* chip8)
     }
     puts("\n=========================");
 }
+
+uint16_t pop(struct state* s)
+{
+    return s->chip8->stack[s->chip8->stacktop--];
+}
+
+void push(struct state* s, uint16_t x)
+{
+    s->chip8->stack[++s->chip8->stacktop] = x;
+}
