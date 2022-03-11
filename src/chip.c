@@ -1,4 +1,5 @@
 #include "chip.h"
+#include "chip_instructions.h"
 #include "helpers.h"
 #include <SDL2/SDL_log.h>
 #include <SDL2/SDL_thread.h>
