@@ -3,6 +3,7 @@
 #include <SDL2/SDL_log.h>
 #include <SDL2/SDL_thread.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
  * the font is copied byte-by-byte
@@ -146,166 +147,135 @@ void fetch(struct state* s)
     s->chip8->program_counter += 2;
 }
 
-/* decode instruction starting with 0 */
-int zero_inst(struct ops* o)
+void decode_execute(struct state* s)
 {
-    switch (o->NN) {
-    case 0xE0:
-        return 0x1;
-    case 0xEE:
-        return 0x2;
-    default:
-        return 0x0;
-    }
-
-    return -1;
-}
-
-int eighth_inst(struct ops* o)
-{
-    switch (o->N) {
+    switch (s->ops->inst) {
     case 0x0:
-        return 0xA;
+        switch (s->ops->NN) {
+
+        case 0xE0:
+            break;
+
+        case 0xEE:
+            break;
+        }
+        break;
 
     case 0x1:
-        return 0xB;
+        break;
 
     case 0x2:
-        return 0xC;
+        break;
 
     case 0x3:
-        return 0xD;
+        break;
 
     case 0x4:
-        return 0xE;
+        break;
 
     case 0x5:
-        return 0xF;
+        break;
 
     case 0x6:
-        return 0x10;
+        break;
 
     case 0x7:
-        return 0x11;
-
-    case 0xE:
-        return 0x12;
-    }
-
-    return -1;
-}
-
-int E_inst(struct ops* o)
-{
-    switch (o->NN) {
-    case 0x9E:
-        return 0x18;
-    case 0xA1:
-        return 0x19;
-    }
-    return -1;
-}
-
-int F_inst(struct ops* o)
-{
-    switch (o->NN) {
-
-    case 0x07:
-        return 0x1A;
-
-    case 0x0A:
-        return 0x1B;
-
-    case 0x15:
-        return 0x1C;
-
-    case 0x18:
-        return 0x1D;
-
-    case 0x1E:
-        return 0x1E;
-
-    case 0x29:
-        return 0x1F;
-
-    case 0x33:
-        return 0x20;
-
-    case 0x55:
-        return 0x21;
-
-    case 0x65:
-        return 0x22;
-    }
-
-    return -1;
-}
-
-int get_instruction_index(struct ops* o)
-{
-
-    switch (o->inst) {
-    case 0x0:
-        return zero_inst(o);
-
-    case 0x1:
-        return 0x3;
-
-    case 0x2:
-        return 0x4;
-
-    case 0x3:
-        return 0x5;
-
-    case 0x4:
-        return 0x6;
-
-    case 0x5:
-        return 0x7;
-
-    case 0x6:
-        return 0x8;
-
-    case 0x7:
-        return 0x9;
+        break;
 
     case 0x8:
-        return eighth_inst(o);
+        switch (s->ops->N) {
+
+        case 0x0:
+            break;
+
+        case 0x1:
+            break;
+
+        case 0x2:
+            break;
+
+        case 0x3:
+            break;
+
+        case 0x4:
+            break;
+
+        case 0x5:
+            break;
+
+        case 0x6:
+            break;
+
+        case 0x7:
+            break;
+
+        case 0xE:
+            break;
+        }
+        break;
 
     case 0x9:
-        return 0x13;
+        break;
 
     case 0xA:
-        return 0x14;
         break;
 
     case 0xB:
-        return 0x15;
         break;
 
     case 0xC:
-        return 0x16;
         break;
 
     case 0xD:
-        return 0x17;
         break;
 
     case 0xE:
-        return E_inst(o);
+        switch (s->ops->NN) {
+
+        case 0x9E:
+            break;
+
+        case 0xA1:
+            break;
+        }
         break;
 
     case 0xF:
-        return F_inst(o);
+        switch (s->ops->NN) {
+
+        case 0x07:
+            break;
+
+        case 0x0A:
+            break;
+
+        case 0x15:
+            break;
+
+        case 0x18:
+            break;
+
+        case 0x1E:
+            break;
+
+        case 0x29:
+            break;
+
+        case 0x33:
+            break;
+
+        case 0x55:
+            break;
+
+        case 0x65:
+            break;
+        }
         break;
+
+    default:
+        SDL_Log("Chip8: Invalid Instruction detected");
+        abort();
     }
-
-    return -1;
-}
-
-int decode(struct state* s)
-{
-    return get_instruction_index(s->ops);
 }
 
 static int emulator_thread(void* arg)
@@ -317,11 +287,7 @@ static int emulator_thread(void* arg)
 
     while (SDL_AtomicGet(&state->run)) {
         fetch(state);
-        int execute = decode(state);
-        if (execute == -1) {
-            SDL_Log("Chip8: Invalid Instruction detected");
-            return FALSE;
-        }
+        decode_execute(state);
     }
 
     return TRUE;
@@ -354,12 +320,8 @@ int main(int argc, char* argv[])
 
     printf("Rom: %s\nRom Size: %d Bytes\n", argv[1], file_size);
 
-    /* Mutexes */
-    SDL_mutex*(mutexes[]) = {[MEMORY] = SDL_CreateMutex()};
-
     /* Populate the state struct */
     static struct state state = {.chip8 = &chip8};
-    state.mutexes = mutexes;
     SDL_AtomicSet(&state.run, TRUE);
 
     /* Create a seprate thread for delay timer, sound timer
@@ -381,13 +343,10 @@ int main(int argc, char* argv[])
     }
 
     /* On exit */
-    SDL_Delay(1008);
     SDL_AtomicSet(&state.run, FALSE);
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
     SDL_WaitThread(st_thread, &st_thread_rtval);
     SDL_WaitThread(emu_thread, &emu_thread_rtval);
-
-    SDL_DestroyMutex(state.mutexes[0]);
 
     /* print out whats left in the delay and sound timer*/
     printf("Delay timer: %d\n", SDL_AtomicGet(&chip8.delay_timer));

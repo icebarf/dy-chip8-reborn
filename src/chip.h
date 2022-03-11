@@ -58,7 +58,6 @@ struct chip8_sys {
 struct state {
     struct chip8_sys* chip8;
     struct ops* ops;
-    SDL_mutex** mutexes;
     SDL_atomic_t run;
 };
 
