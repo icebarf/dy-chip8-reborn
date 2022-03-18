@@ -1,10 +1,9 @@
 #include "chip.h"
 #include "chip_instructions.h"
 #include "helpers.h"
-#include <SDL2/SDL_log.h>
-#include <SDL2/SDL_thread.h>
-#include <stdint.h>
+#include <SDL2/SDL_atomic.h>
 #include <stdlib.h>
+#include <time.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
  * the font is copied byte-by-byte
@@ -287,8 +286,8 @@ static int emulator_thread(void* arg)
     struct state* state = (struct state*)arg;
 
     while (SDL_AtomicGet(&state->run)) {
-        fetch(state);
-        decode_execute(state);
+        // fetch(state);
+        // decode_execute(state);
     }
 
     return TRUE;
@@ -301,6 +300,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    srand(time(NULL));
+
     /* initiate chip8 instance */
     static struct chip8_sys chip8 = {0};
 
@@ -308,18 +309,15 @@ int main(int argc, char* argv[])
     load_font(&chip8);
     chip8.program_counter = 0x200;
 
-    /* Testing code */
-    SDL_AtomicSet(&chip8.delay_timer, 60);
-    SDL_AtomicSet(&chip8.sound_timer, 60);
+    SDL_AtomicSet(&chip8.delay_timer, 0);
+    SDL_AtomicSet(&chip8.sound_timer, 0);
 
-    /* fetchrom and do other stuff */
+    /* fetchrom */
     int file_size = fetchrom(&chip8, argv[1]);
 
     if (file_size == EXIT_FAILURE) {
         exit(EXIT_FAILURE);
     }
-
-    printf("Rom: %s\nRom Size: %d Bytes\n", argv[1], file_size);
 
     /* Populate the state struct */
     static struct state state = {.chip8 = &chip8};
@@ -342,6 +340,10 @@ int main(int argc, char* argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Could not create threads: %s", SDL_GetError());
     }
+
+    /* Do not exit the main thread until run is True */
+    while (SDL_AtomicGet(&state.run))
+        continue;
 
     /* On exit */
     SDL_AtomicSet(&state.run, FALSE);

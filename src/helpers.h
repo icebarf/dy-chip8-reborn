@@ -6,6 +6,6 @@
 void print_program_memory(struct chip8_sys* chip8);
 
 /* Push and pop from the stack */
-uint16_t pop(struct state* s);
-void push(struct state* s, uint16_t x);
+uint16_t pop(struct chip8_sys* chip8);
+void push(struct chip8_sys* chip8, uint16_t x);
 #endif

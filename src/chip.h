@@ -6,7 +6,7 @@
 
 enum MUTEX { MEMORY };
 enum RUN { FALSE, TRUE };
-enum CHIP8 { INST_CNT = 35 };
+enum CHIP8 { INST_CNT = 35, DISPW = 64, DISPH = 32 };
 
 /* different values related to instructions -
  * https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Instruction-Set
@@ -52,7 +52,9 @@ struct chip8_sys {
     SDL_atomic_t delay_timer;
     SDL_atomic_t sound_timer;
 
-    int stacktop;
+    /* Extra system information - Stacktop and flags */
+    uint8_t stacktop;
+    uint8_t DrawFL;
 };
 
 struct state {
