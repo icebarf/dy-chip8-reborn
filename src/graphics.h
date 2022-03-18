@@ -1,0 +1,4 @@
+#ifndef REBORN_CHIP_GRAPHICS_H
+#define REBORN_CHIP_GRAPHICS_H
+
+#endif
