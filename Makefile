@@ -31,10 +31,10 @@ all: $(termbox_o) $(OBJECTS) binary clean
 
 # Termbox is statically linked
 $(termbox_o): $(termbox_h)
-	$(CC) -DTB_IMPL -DTB_OPT_TRUECOLOR -DTB_OPT_EGC -fPIC -xc -c $(termbox_cflags) $(termbox_h) -o $(termbox_o)
+	$(CC) -DTB_IMPL -DTB_OPT_TRUECOLOR -DTB_OPT_EGC -fPIC -xc -g -c $(termbox_cflags) $(termbox_h) -o $(termbox_o)
 
 %.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -g -c $< -o $@
 
 OB := $(OBJECTS) $(termbox_o)
 
