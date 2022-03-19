@@ -7,31 +7,6 @@
 enum MUTEX { MEMORY };
 enum RUN { FALSE, TRUE };
 enum CHIP8 { INST_CNT = 35, DISPW = 64, DISPH = 32 };
-
-/* different values related to instructions -
- * https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Instruction-Set
- *
- * opcode   - full 16-bit instruction
- * NNN      - second, third, fourth nibble - a 12bit number in a 16-bit value
- * NN       - lower byte
- * inst     - upper byte
- * inst_nib - the first  nibble
- * X        - the second nibble
- * Y        - the third  nibble
- * N        - the fourth nibble
- */
-
-struct ops {
-    uint16_t opcode;
-    uint16_t NNN;
-    uint8_t NN;
-    uint8_t inst;
-    uint8_t inst_nib;
-    uint8_t X;
-    uint8_t Y;
-    uint8_t N;
-};
-
 /* The chip8 system */
 struct chip8_sys {
 
@@ -57,9 +32,42 @@ struct chip8_sys {
     uint8_t DrawFL;
 };
 
+/* different values related to instructions -
+ * https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Instruction-Set
+ *
+ * opcode   - full 16-bit instruction
+ * NNN      - second, third, fourth nibble - a 12bit number in a 16-bit value
+ * NN       - lower byte
+ * inst     - upper byte
+ * inst_nib - the first  nibble
+ * X        - the second nibble
+ * Y        - the third  nibble
+ * N        - the fourth nibble
+ */
+
+struct ops {
+    uint16_t opcode;
+    uint16_t NNN;
+    uint8_t NN;
+    uint8_t inst;
+    uint8_t inst_nib;
+    uint8_t X;
+    uint8_t Y;
+    uint8_t N;
+};
+
+/* Different SDL Objects */
+struct sdl_objs {
+    SDL_Window* screen;
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+    uint32_t* pixels;
+};
+
 struct state {
     struct chip8_sys* chip8;
     struct ops* ops;
+    struct sdl_objs* sdl_objs;
     SDL_atomic_t run;
 };
 

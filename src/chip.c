@@ -1,5 +1,6 @@
 #include "chip.h"
 #include "chip_instructions.h"
+#include "graphics.h"
 #include "helpers.h"
 #include <SDL2/SDL_atomic.h>
 #include <stdlib.h>
@@ -293,7 +294,7 @@ static int emulator_thread(void* arg)
     return TRUE;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
     if (argc < 2) {
         puts("Usage: chip8 romfile.ch8");
@@ -319,8 +320,15 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
+    /* SDL Objs structure - for video/graphics */
+    struct sdl_objs sdl_objs = {0};
+
+    /* create a window - also initialises sdl_objs struct */
+    create_window(DISPH * 20, DISPW * 20, &sdl_objs);
+
     /* Populate the state struct */
     static struct state state = {.chip8 = &chip8};
+    state.sdl_objs = &sdl_objs;
     SDL_AtomicSet(&state.run, TRUE);
 
     /* Create a seprate thread for delay timer, sound timer
