@@ -4,19 +4,19 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 
-enum MUTEX { MEMORY };
-enum RUN { FALSE, TRUE };
-enum CHIP8 { INST_CNT = 35, DISPW = 64, DISPH = 32 };
-/* The chip8 system */
+enum constants {
+    FALSE = 0,
+    TRUE = 1,
+    INST_CNT = 35,
+    DISPW = 64,
+    DISPH = 32,
+    MEMSIZE = 4096,
+    REGNUM = 16,
+    STACKSIZE = 48,
+    DISPLAY_SIZE = DISPW * DISPH,
+};
+
 struct chip8_sys {
-
-    const enum constants {
-        MEMSIZE = 4096,
-        REGNUM = 16,
-        STACKSIZE = 48,
-        DISPLAY_SIZE = 64 * 32
-    } constants;
-
     uint8_t memory[MEMSIZE];
     uint16_t stack[STACKSIZE];
     uint8_t registers[REGNUM];
@@ -56,7 +56,6 @@ struct ops {
     uint8_t N;
 };
 
-/* Different SDL Objects */
 struct sdl_objs {
     SDL_Window* screen;
     SDL_Renderer* renderer;
