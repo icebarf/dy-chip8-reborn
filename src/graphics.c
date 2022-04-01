@@ -44,13 +44,7 @@ int create_window(unsigned int height, unsigned int width,
         return 1;
     }
 
-    /* Texture - A texture with pixels of ABGR format(32 bits) of DISPW * DISPH.
-     * Note that DISPW and DISPH can and mostly will be different from 'height'
-     * and 'width' because while we may want to create a window of larger
-     * resolution but the texture should be of the original chip8 display size.
-     * While this can be generally treated with other methods which i will not
-     * go detail into, I prefer the simple to implement (yet very blocky)
-     * approach */
+    /* Texture - A texture with pixels of ABGR format(32 bits) of DISPW * DISPH. */
     sdl_objs->texture =
         SDL_CreateTexture(sdl_objs->renderer, SDL_PIXELFORMAT_ABGR32,
                           SDL_TEXTUREACCESS_STREAMING, DISPW, DISPH);
