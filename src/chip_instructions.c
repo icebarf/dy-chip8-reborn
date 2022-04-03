@@ -141,7 +141,7 @@ void instruction_8xy7(struct chip8_sys* chip8, struct ops* op)
 }
 
 /* Set VX = Left Shift VY by 1 and Set VF = MSB(VY) */
-void instruction_8xyE(struct chip8_sys* chip8, struct ops* op)
+void instruction_8xye(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] = chip8->registers[op->Y] << 1;
 

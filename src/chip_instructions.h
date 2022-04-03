@@ -25,7 +25,7 @@ void instruction_8xy4(struct chip8_sys* chip8, struct ops* ops);
 void instruction_8xy5(struct chip8_sys* chip8, struct ops* ops);
 void instruction_8xy6(struct chip8_sys* chip8, struct ops* ops);
 void instruction_8xy7(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xyE(struct chip8_sys* chip8, struct ops* ops);
+void instruction_8xye(struct chip8_sys* chip8, struct ops* ops);
 void instruction_9xy0(struct chip8_sys* chip8, struct ops* ops);
 void instruction_annn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_bnnn(struct chip8_sys* chip8, struct ops* ops);
