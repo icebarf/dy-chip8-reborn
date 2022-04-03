@@ -14,6 +14,7 @@ enum constants {
     REGNUM = 16,
     STACKSIZE = 48,
     DISPLAY_SIZE = DISPW * DISPH,
+    KEYS = 16
 };
 
 struct chip8_sys {
@@ -68,6 +69,7 @@ struct state {
     struct ops* ops;
     struct sdl_objs* sdl_objs;
     SDL_atomic_t run;
+    uint8_t keystates[KEYS];
 };
 
 #endif

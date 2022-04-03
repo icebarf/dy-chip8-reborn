@@ -7,7 +7,6 @@
 #include <time.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
- * the font is copied byte-by-byte
  */
 static void load_font(struct chip8_sys* chip8)
 {
@@ -52,7 +51,6 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
         return EXIT_FAILURE;
     }
 
-    /* store the position/byte of end */
     int file_size = ftell(fp);
 
     /* goes back */
@@ -74,12 +72,6 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     return file_size;
 }
 
-/* this function is supposed to run as a separate thread
- * it receives an arg which is actually the state structure
- * It continues to decrement the delay_timer until 0 and
- * then it stops decrementing - also exits when state->run is set to FALSE by
- * main thread
- */
 static int delay_timer_thread(void* arg)
 {
     if (arg == NULL)
@@ -120,9 +112,6 @@ static int sound_timer_thread(void* arg)
     return TRUE;
 }
 
-/* fetch instruction
- * To know what all these random names mean
- * check src/chip.h - L11:22 */
 void fetch(struct state* s)
 {
     s->ops->opcode = (s->chip8->memory[s->chip8->program_counter] << 8) |
@@ -155,79 +144,102 @@ void decode_execute(struct state* s)
         switch (s->ops->NN) {
 
         case 0xE0:
+            instruction_00e0(s->chip8, s->ops);
             break;
 
         case 0xEE:
+            instruction_00ee(s->chip8, s->ops);
             break;
         }
         break;
 
     case 0x1:
+        instruction_1nnn(s->chip8, s->ops);
         break;
 
     case 0x2:
+        instruction_2nnn(s->chip8, s->ops);
         break;
 
     case 0x3:
+        instruction_3xnn(s->chip8, s->ops);
         break;
 
     case 0x4:
+        instruction_4xnn(s->chip8, s->ops);
         break;
 
     case 0x5:
+        instruction_5xy0(s->chip8, s->ops);
         break;
 
     case 0x6:
+        instruction_6xnn(s->chip8, s->ops);
         break;
 
     case 0x7:
+        instruction_7xnn(s->chip8, s->ops);
         break;
 
     case 0x8:
         switch (s->ops->N) {
 
         case 0x0:
+            instruction_8xy0(s->chip8, s->ops);
             break;
 
         case 0x1:
+            instruction_8xy1(s->chip8, s->ops);
             break;
 
         case 0x2:
+            instruction_8xy2(s->chip8, s->ops);
             break;
 
         case 0x3:
+            instruction_8xy3(s->chip8, s->ops);
             break;
 
         case 0x4:
+            instruction_8xy4(s->chip8, s->ops);
             break;
 
         case 0x5:
+            instruction_8xy1(s->chip8, s->ops);
             break;
 
         case 0x6:
+            instruction_8xy6(s->chip8, s->ops);
             break;
 
         case 0x7:
+            instruction_8xy7(s->chip8, s->ops);
             break;
 
         case 0xE:
+            instruction_8xye(s->chip8, s->ops);
             break;
         }
         break;
 
     case 0x9:
+        instruction_9xy0(s->chip8, s->ops);
         break;
 
     case 0xA:
+        instruction_annn(s->chip8, s->ops);
         break;
 
     case 0xB:
+        instruction_bnnn(s->chip8, s->ops);
         break;
 
     case 0xC:
+        instruction_cxnn(s->chip8, s->ops);
         break;
 
     case 0xD:
+        instruction_dxyn(s->chip8, s->ops);
         break;
 
     case 0xE:
@@ -287,6 +299,16 @@ static int emulator_thread(void* arg)
     struct state* state = (struct state*)arg;
 
     while (SDL_AtomicGet(&state->run)) {
+        /* poll and event */
+        SDL_Event event;
+        SDL_PollEvent(&event);
+
+        switch (event.type) {
+        /* Quit from emulator */
+        case SDL_QUIT:
+            SDL_AtomicSet(&state->run, 0);
+            break;
+        }
         // fetch(state);
         // decode_execute(state);
     }
@@ -303,7 +325,6 @@ int main(int argc, char** argv)
 
     srand(time(NULL));
 
-    /* initiate chip8 instance */
     static struct chip8_sys chip8 = {0};
 
     chip8.stacktop = -1;
@@ -313,26 +334,24 @@ int main(int argc, char** argv)
     SDL_AtomicSet(&chip8.delay_timer, 0);
     SDL_AtomicSet(&chip8.sound_timer, 0);
 
-    /* fetchrom */
     int file_size = fetchrom(&chip8, argv[1]);
 
     if (file_size == EXIT_FAILURE) {
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
-    /* SDL Objs structure - for video/graphics */
     struct sdl_objs sdl_objs = {0};
 
-    /* create a window - also initialises sdl_objs struct */
-    create_window(DISPH * 20, DISPW * 20, &sdl_objs);
+    if (create_window(DISPH * 20, DISPW * 20, &sdl_objs)) {
+        return EXIT_FAILURE;
+    }
 
     /* Populate the state struct */
     static struct state state = {.chip8 = &chip8};
     state.sdl_objs = &sdl_objs;
     SDL_AtomicSet(&state.run, TRUE);
 
-    /* Create a seprate thread for delay timer, sound timer
-     * and the main emulator loop */
+    /* Threads */
     int dt_thread_rtval, st_thread_rtval, emu_thread_rtval;
 
     SDL_Thread* dt_thread =
@@ -358,10 +377,6 @@ int main(int argc, char** argv)
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
     SDL_WaitThread(st_thread, &st_thread_rtval);
     SDL_WaitThread(emu_thread, &emu_thread_rtval);
-
-    /* print out whats left in the delay and sound timer*/
-    printf("Delay timer: %d\n", SDL_AtomicGet(&chip8.delay_timer));
-    printf("Sound timer: %d\n", SDL_AtomicGet(&chip8.sound_timer));
 
     return 0;
 }
