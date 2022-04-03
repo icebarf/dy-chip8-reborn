@@ -7,8 +7,13 @@ CFLAGS += -Wall -Wextra -Wpedantic
 BIN := bin
 SRC := src
 
+# Release mode and flags
+DEBUG := -g3 -fsanitize=thread
+RELEASE := -O2 -fomit-frame-pointer -flto
+MODE:=$(DEBUG)
+
 # Output file
-VER := 0.0.4-alpha
+VER := 0.0.6-alpha
 A.OUT := chip8-rb-$(VER)
 ifeq ($(OS),Windows_NT)
 	A.OUT := chip8-rb-$(VER).exe
@@ -19,20 +24,23 @@ LIB := sdl2
 PKGCONFIG := `pkg-config --libs --cflags $(LIB)`
 
 # Name of files present under src in order they depend on each other
-OBJECTS := chip.o chip_instructions.o graphics.o helpers.o 
+OBJECTS := chip.o chip_instructions.o graphics.o helpers.o keyboard.o
 
-.PHONY: all binary clean
+.PHONY: all binary dir clean
 
 .DEFAULT_GOAL: all
 
-all: $(OBJECTS) binary clean
+all: dir $(OBJECTS) binary
+
+dir:
+	mkdir -p bin
 
 %.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -g -c $< -o $@ $(PKGCONFIG)
+	$(CC) $(CFLAGS) $(MODE) -c $< -o $(BIN)/$@ $(PKGCONFIG)
 
 
-binary: $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $(BIN)/$(A.OUT) $(PKGCONFIG)
+binary: $(BIN)/$(OBJECTS)
+	$(CC) $(CFLAGS) $(BIN)/*.o $(MODE) -o $(BIN)/$(A.OUT) $(PKGCONFIG)
 
 clean:
-	rm *.o
+	rm $(BIN)/*.o
