@@ -8,7 +8,7 @@ BIN := bin
 SRC := src
 
 # Output file
-VER := 0.0.3-alpha
+VER := 0.0.4-alpha
 A.OUT := chip8-rb-$(VER)
 ifeq ($(OS),Windows_NT)
 	A.OUT := chip8-rb-$(VER).exe
