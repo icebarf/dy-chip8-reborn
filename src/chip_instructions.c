@@ -10,6 +10,7 @@
 #include "chip_instructions.h"
 #include "chip.h"
 #include "helpers.h"
+#include <SDL2/SDL_atomic.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -174,20 +175,19 @@ void instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
 }
 
 /* draw sprite at (VX,VY) with sprite data from address stored at VI*/
-void instruction_dxyn(struct chip8_sys* chip8, struct ops* ops)
+void instruction_dxyn(struct state* s)
 {
-    /* I dont understand why I have to modulo */
-    uint8_t x = chip8->registers[ops->X] % DISPW;
-    uint8_t y = chip8->registers[ops->Y] % DISPH;
+    uint8_t x = s->chip8->registers[s->ops->X] & (DISPW - 1);
+    uint8_t y = s->chip8->registers[s->ops->Y] & (DISPH - 1);
 
-    chip8->registers[0xF] = 0;
+    s->chip8->registers[0xF] = 0;
 
-    for (int h = 0; h < ops->N; h++) {
+    for (int h = 0; h < s->ops->N; h++) {
         /* dont draw on the bottom edge */
         if (h + y >= DISPH)
             return;
 
-        uint16_t pixel = chip8->memory[chip8->index + h];
+        uint16_t pixel = s->chip8->memory[s->chip8->index + h];
 
         for (int w = 0; w < 8; w++) {
             /* dont draw on the right edge */
@@ -198,15 +198,15 @@ void instruction_dxyn(struct chip8_sys* chip8, struct ops* ops)
                 /* if the pixel already on display is one
                  * then set VF to 1 to indicate collision
                  */
-                if (chip8->display[(x + w) + ((y + h) * DISPW)])
-                    chip8->registers[0xF] = 1;
+                if (s->chip8->display[(x + w) + ((y + h) * DISPW)])
+                    s->chip8->registers[0xF] = 1;
 
                 /* Simply XOR with pixel since its known that
                  * pixel on display is already zero
                  */
-                chip8->display[(x + w) + ((y + h) * DISPW)] ^= 1;
+                s->chip8->display[(x + w) + ((y + h) * DISPW)] ^= 1;
             }
         }
     }
-    chip8->DrawFL = TRUE;
+    SDL_AtomicSet(&s->DrawFL, TRUE);
 }

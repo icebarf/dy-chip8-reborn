@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include "chip.h"
 #include <SDL2/SDL_atomic.h>
+#include <SDL2/SDL_mutex.h>
 #include <SDL2/SDL_pixels.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -83,16 +84,6 @@ int create_window(unsigned int height, unsigned int width,
     SDL_RenderPresent(sdl_objs->renderer);
 
     return 0;
-}
-
-void draw_to_display(uint8_t* chip8_display, uint32_t* pixels)
-{
-    for (uint16_t i = 0; i < DISPW * DISPH; i++) {
-        if (chip8_display[i])
-            pixels[i] = 0xe06c75ff; // one dark theme red
-        else
-            pixels[i] = 0x282c34ff;
-    }
 }
 
 void sdl_video_cleanup(struct sdl_objs* sdl_objs)

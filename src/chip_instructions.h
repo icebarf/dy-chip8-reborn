@@ -30,6 +30,6 @@ void instruction_9xy0(struct chip8_sys* chip8, struct ops* ops);
 void instruction_annn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_bnnn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_cxnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_dxyn(struct chip8_sys* chip8, struct ops* ops);
+void instruction_dxyn(struct state* s);
 
 #endif
