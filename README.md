@@ -23,10 +23,6 @@ and anything else that I may wish to do in the future.
 - [make](https://www.gnu.org/software/make/) - Build system for the project
 - cc - A C Compiler usually GCC or Clang
   
-No need to install the following as it is shipped with code
-
-- [termbox2](https://github.com/termbox/termbox2) - Terminal rendering library
-
 # Compiling
 
 Make sure that `sdl2`, `git`, `make` are installed on your machine.
@@ -39,16 +35,7 @@ $ git clone https://github.com/icebarf/dy-chip8-reborn
 
 $ cd dy-chip8-reborn
 
-$ chmod +x configure.sh
-
-$ ./configure.sh
-
 $ make
 ```
 
 After following above three steps, you should have a file called `chip8-rb`.
-
-## Example
-
-The following pictures shows how the code was compiled, assuming that all dependencies were installed.
-![ex_compile.png](img/ex_compile.png)
