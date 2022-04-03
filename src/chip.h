@@ -28,7 +28,6 @@ struct chip8_sys {
     SDL_atomic_t delay_timer;
     SDL_atomic_t sound_timer;
 
-    /* Extra system information - Stacktop and flags */
     uint8_t stacktop;
 };
 
@@ -67,6 +66,7 @@ struct state {
     struct ops* ops;
     struct sdl_objs* sdl_objs;
     SDL_mutex* pixels_mutex;
+    SDL_mutex* main_mutex;
     SDL_atomic_t run;
     uint8_t keystates[KEYS];
     SDL_atomic_t DrawFL;

@@ -1,8 +1,11 @@
 #include "graphics.h"
 #include "chip.h"
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_atomic.h>
 #include <SDL2/SDL_mutex.h>
 #include <SDL2/SDL_pixels.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_video.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,12 +13,6 @@
 int create_window(unsigned int height, unsigned int width,
                   struct sdl_objs* sdl_objs)
 {
-    /* initialise video*/
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
-        fprintf(stderr, "Could not init SDL Video: %s\n", SDL_GetError());
-        return 1;
-    }
-
     /* Create window */
     sdl_objs->screen =
         SDL_CreateWindow("Chip-8 Reborn", SDL_WINDOWPOS_CENTERED,
@@ -82,12 +79,16 @@ int create_window(unsigned int height, unsigned int width,
     }
 
     SDL_RenderPresent(sdl_objs->renderer);
-
     return 0;
 }
 
-void sdl_video_cleanup(struct sdl_objs* sdl_objs)
+void video_cleanup(struct sdl_objs* sdl_objs, SDL_mutex* pixel_mutex)
 {
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_LockMutex(pixel_mutex);
+    SDL_DestroyTexture(sdl_objs->texture);
+    SDL_DestroyRenderer(sdl_objs->renderer);
+    SDL_DestroyWindow(sdl_objs->screen);
+    SDL_Quit();
     free(sdl_objs->pixels);
+    SDL_UnlockMutex(pixel_mutex);
 }

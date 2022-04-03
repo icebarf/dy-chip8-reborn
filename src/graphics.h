@@ -4,6 +4,7 @@
 #include "chip.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mutex.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_video.h>
@@ -14,5 +15,5 @@
 int create_window(unsigned int height, unsigned int width,
                   struct sdl_objs* sdl_objs);
 
-void sdl_video_cleanup(struct sdl_objs* sdl_objs);
+void video_cleanup(struct sdl_objs* sdl_objs, SDL_mutex* pixel_mutex);
 #endif
