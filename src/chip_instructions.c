@@ -11,6 +11,7 @@
 #include "chip.h"
 #include "helpers.h"
 #include <SDL2/SDL_atomic.h>
+#include <SDL2/SDL_mutex.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -177,6 +178,8 @@ void instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
 /* draw sprite at (VX,VY) with sprite data from address stored at VI*/
 void instruction_dxyn(struct state* s)
 {
+    SDL_LockMutex(s->pixels_mutex);
+
     uint8_t x = s->chip8->registers[s->ops->X] & (DISPW - 1);
     uint8_t y = s->chip8->registers[s->ops->Y] & (DISPH - 1);
 
@@ -208,5 +211,7 @@ void instruction_dxyn(struct state* s)
             }
         }
     }
+
     SDL_AtomicSet(&s->DrawFL, TRUE);
+    SDL_UnlockMutex(s->pixels_mutex);
 }

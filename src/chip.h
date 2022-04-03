@@ -30,7 +30,6 @@ struct chip8_sys {
 
     /* Extra system information - Stacktop and flags */
     uint8_t stacktop;
-    uint8_t DrawFL;
 };
 
 /* different values related to instructions -
@@ -43,8 +42,7 @@ struct chip8_sys {
  * inst_nib - the first  nibble
  * X        - the second nibble
  * Y        - the third  nibble
- * N        - the fourth nibble
- */
+ * N        - the fourth nibble */
 
 struct ops {
     uint16_t opcode;
@@ -68,8 +66,10 @@ struct state {
     struct chip8_sys* chip8;
     struct ops* ops;
     struct sdl_objs* sdl_objs;
+    SDL_mutex* pixels_mutex;
     SDL_atomic_t run;
     uint8_t keystates[KEYS];
+    SDL_atomic_t DrawFL;
 };
 
 #endif

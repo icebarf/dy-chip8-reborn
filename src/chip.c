@@ -3,6 +3,8 @@
 #include "graphics.h"
 #include "helpers.h"
 #include <SDL2/SDL_atomic.h>
+#include <SDL2/SDL_thread.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -70,46 +72,6 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     fclose(fp);
     return file_size;
-}
-
-static int delay_timer_thread(void* arg)
-{
-    if (arg == NULL)
-        abort();
-
-    struct state* state = (struct state*)arg;
-
-    /* sleep for 17 milliseconds then continue - this is equivalent of
-     * running the loop at 60hz ignoring the delay of function calls
-     */
-    while (SDL_AtomicGet(&state->run)) {
-        uint8_t is_zero = (SDL_AtomicGet(&state->chip8->delay_timer) == 0);
-        if (!is_zero) {
-            SDL_AtomicDecRef(&state->chip8->delay_timer);
-            SDL_Delay(17);
-        }
-    }
-
-    return TRUE;
-}
-
-/* same as delay timer except it is for the sound timer */
-static int sound_timer_thread(void* arg)
-{
-    if (arg == NULL)
-        abort();
-
-    struct state* state = (struct state*)arg;
-
-    while (SDL_AtomicGet(&state->run)) {
-        uint8_t is_zero = (SDL_AtomicGet(&state->chip8->sound_timer) == 0);
-        if (!is_zero) {
-            SDL_AtomicDecRef(&state->chip8->sound_timer);
-            SDL_Delay(17);
-        }
-    }
-
-    return TRUE;
 }
 
 void fetch(struct state* s)
@@ -239,7 +201,7 @@ void decode_execute(struct state* s)
         break;
 
     case 0xD:
-        instruction_dxyn(s->chip8, s->ops);
+        instruction_dxyn(s);
         break;
 
     case 0xE:
@@ -291,10 +253,69 @@ void decode_execute(struct state* s)
     }
 }
 
+static int delay_timer_thread(void* arg)
+{
+    assert(arg != NULL);
+
+    struct state* state = (struct state*)arg;
+
+    /* sleep for 17 milliseconds then continue - this is equivalent of
+     * running the loop at 60hz ignoring the delay of function calls
+     */
+    while (SDL_AtomicGet(&state->run)) {
+        uint8_t is_zero = (SDL_AtomicGet(&state->chip8->delay_timer) == 0);
+        if (!is_zero) {
+            SDL_AtomicDecRef(&state->chip8->delay_timer);
+            SDL_Delay(17);
+        }
+    }
+
+    return TRUE;
+}
+
+/* same as delay timer except it is for the sound timer */
+static int sound_timer_thread(void* arg)
+{
+    assert(arg != NULL);
+
+    struct state* state = (struct state*)arg;
+
+    while (SDL_AtomicGet(&state->run)) {
+        uint8_t is_zero = (SDL_AtomicGet(&state->chip8->sound_timer) == 0);
+        if (!is_zero) {
+            SDL_AtomicDecRef(&state->chip8->sound_timer);
+            SDL_Delay(17);
+        }
+    }
+
+    return TRUE;
+}
+
+static int draw_to_display_thread(void* arg)
+{
+    struct state* s = (struct state*)arg;
+
+    while (SDL_AtomicGet(&s->run)) {
+        if (SDL_AtomicGet(&s->DrawFL)) {
+            SDL_LockMutex(s->pixels_mutex);
+
+            for (uint16_t i = 0; i < DISPW * DISPH; i++) {
+                if (s->chip8->display[i])
+                    s->sdl_objs->pixels[i] = 0xe06c75ff; // one dark theme red
+                else
+                    s->sdl_objs->pixels[i] = 0x282c34ff;
+            }
+            SDL_AtomicSet(&s->DrawFL, FALSE);
+            SDL_UnlockMutex(s->pixels_mutex);
+        }
+    }
+
+    return TRUE;
+}
+
 static int emulator_thread(void* arg)
 {
-    if (arg == NULL)
-        abort();
+    assert(arg != NULL);
 
     struct state* state = (struct state*)arg;
 
@@ -352,7 +373,7 @@ int main(int argc, char** argv)
     SDL_AtomicSet(&state.run, TRUE);
 
     /* Threads */
-    int dt_thread_rtval, st_thread_rtval, emu_thread_rtval;
+    int dt_thread_rtval, st_thread_rtval, emu_thread_rtval, dsp_thread_rtval;
 
     SDL_Thread* dt_thread =
         SDL_CreateThread(delay_timer_thread, "DelayTimerThread", (void*)&state);
@@ -363,7 +384,12 @@ int main(int argc, char** argv)
     SDL_Thread* emu_thread =
         SDL_CreateThread(emulator_thread, "EmuThread", (void*)&state);
 
-    if (dt_thread == NULL || st_thread == NULL || emu_thread == NULL) {
+    SDL_Thread* dsp_thread = SDL_CreateThread(draw_to_display_thread,
+                                              "DisplayThread", (void*)&state);
+
+    if (dt_thread == NULL || st_thread == NULL || emu_thread == NULL ||
+        dsp_thread == NULL) {
+
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Could not create threads: %s", SDL_GetError());
     }
@@ -377,6 +403,7 @@ int main(int argc, char** argv)
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
     SDL_WaitThread(st_thread, &st_thread_rtval);
     SDL_WaitThread(emu_thread, &emu_thread_rtval);
+    SDL_WaitThread(dsp_thread, &dsp_thread_rtval);
 
     return 0;
 }
