@@ -16,10 +16,13 @@
 #include <time.h>
 
 /* clear screen */
-void instruction_00e0(struct chip8_sys* chip8, struct ops* op)
+void instruction_00e0(struct chip8_sys* chip8, struct ops* op,
+                      SDL_mutex* pixels_mutex)
 {
     (void)op;
+    SDL_LockMutex(pixels_mutex);
     memset(chip8->display, 0, DISPLAY_SIZE);
+    SDL_UnlockMutex(pixels_mutex);
 }
 
 /* return from subroutine */
@@ -103,7 +106,7 @@ void instruction_8xy3(struct chip8_sys* chip8, struct ops* op)
 void instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[0xF] =
-        (chip8->registers[op->X] > UINT16_MAX - chip8->registers[op->Y]);
+        (chip8->registers[op->X] > UINT8_MAX - chip8->registers[op->Y]);
 
     chip8->registers[op->X] += chip8->registers[op->Y];
 }
@@ -111,12 +114,10 @@ void instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
 /* sub VY from VX and set VF if it does not borrow */
 void instruction_8xy5(struct chip8_sys* chip8, struct ops* op)
 {
-    /* Assume it does not borrow*/
-    chip8->registers[0xF] = 1;
-
-    /* Well if it does then just unset or 0*/
     if (chip8->registers[op->X] < chip8->registers[op->Y])
         chip8->registers[0xF] = 0;
+    else
+        chip8->registers[0xF] = 1;
 
     chip8->registers[op->X] -= chip8->registers[op->Y];
 }
@@ -124,9 +125,13 @@ void instruction_8xy5(struct chip8_sys* chip8, struct ops* op)
 /* Set VX = Right Shift VY by 1 and Set VF = LSB(VY) */
 void instruction_8xy6(struct chip8_sys* chip8, struct ops* op)
 {
-    chip8->registers[op->X] = chip8->registers[op->Y] >> 1;
+    // remember to implement quirk
+    chip8->registers[0xF] = 0;
 
-    chip8->registers[0xF] = chip8->registers[op->Y] & 1;
+    if (chip8->registers[op->X] & 1)
+        chip8->registers[0xF] = 1;
+
+    chip8->registers[op->X] >>= 1;
 }
 
 /* sub VX from VY and set VF if it does not borrow */
@@ -145,9 +150,13 @@ void instruction_8xy7(struct chip8_sys* chip8, struct ops* op)
 /* Set VX = Left Shift VY by 1 and Set VF = MSB(VY) */
 void instruction_8xye(struct chip8_sys* chip8, struct ops* op)
 {
-    chip8->registers[op->X] = chip8->registers[op->Y] << 1;
+    chip8->registers[0xF] = 0;
 
-    chip8->registers[0xF] = chip8->registers[op->Y] & (1 << 7);
+    // remember to implement quirk here
+    if (chip8->registers[op->X] & (1 << 7))
+        chip8->registers[0xF] = 1;
+
+    chip8->registers[op->X] <<= 1;
 }
 
 /* skip instruction if VX != XY */
@@ -172,7 +181,7 @@ void instruction_bnnn(struct chip8_sys* chip8, struct ops* op)
 /* Set VX to random number masked with NN */
 void instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
 {
-    chip8->registers[op->X] = (rand() % UINT16_MAX) & op->NN;
+    chip8->registers[op->X] = (rand() % UINT8_MAX) & op->NN;
 }
 
 /* draw sprite at (VX,VY) with sprite data from address stored at VI*/
@@ -193,9 +202,11 @@ void instruction_dxyn(struct state* s)
         uint16_t pixel = s->chip8->memory[s->chip8->index + h];
 
         for (int w = 0; w < 8; w++) {
+
             /* dont draw on the right edge */
             if (w + x >= DISPW)
                 return;
+
             /* if the pixel to be rendered is not zero */
             if (pixel & (0x80 >> w)) {
                 /* if the pixel already on display is one
@@ -214,4 +225,99 @@ void instruction_dxyn(struct state* s)
 
     SDL_AtomicSet(&s->DrawFL, TRUE);
     SDL_UnlockMutex(s->pixels_mutex);
+}
+
+/* skip next instruction if key in VX is UP*/
+void instruction_ex9e(struct state* s)
+{
+    if (s->keystates[s->chip8->registers[s->ops->X]] == UP)
+        s->chip8->program_counter += 2;
+}
+
+/* skip next instruction if key in VX is DOWN*/
+void instruction_exa1(struct state* s)
+{
+    if (s->keystates[s->chip8->registers[s->ops->X]] == DOWN)
+        s->chip8->program_counter += 2;
+}
+
+/* Store the current value of delay timer in VX */
+void instruction_fx07(struct chip8_sys* chip8, struct ops* ops)
+{
+    chip8->registers[ops->X] = SDL_AtomicGet(&chip8->delay_timer);
+}
+
+/* wait for a keypress, when pressed store the result in VX */
+void instruction_fx0a(struct state* s)
+{
+    s->chip8->program_counter -= 2;
+
+    for (uint8_t i = 0x0; i < 0x10; i++) {
+
+        if (s->keystates[i] == UP) {
+
+            s->chip8->registers[s->ops->X] = i;
+            s->chip8->program_counter += 2;
+        }
+    }
+}
+
+/* set delay timer to VX */
+void instruction_fx15(struct chip8_sys* chip8, struct ops* ops)
+{
+    SDL_AtomicSet(&chip8->delay_timer, chip8->registers[ops->X]);
+}
+
+/* set sound timer to VX */
+void instruction_fx18(struct chip8_sys* chip8, struct ops* ops)
+{
+    SDL_AtomicSet(&chip8->sound_timer, chip8->registers[ops->X]);
+}
+
+/* add VX to index_register */
+void instruction_fx1e(struct chip8_sys* chip8, struct ops* ops)
+{
+    chip8->index += chip8->registers[ops->X];
+}
+
+/* set index to the memory location of the sprite, which is a hex digit stored
+ * in VX */
+void instruction_fx29(struct chip8_sys* chip8, struct ops* ops)
+{
+    chip8->index = 5 * (chip8->registers[ops->X]);
+}
+
+/* store VX in BCD format at memory i, i+1, i+2 respectively for H,T,O
+ * BCD - Binary Coded Decimal
+ * HTO - Hundreds Tens Ones */
+void instruction_fx33(struct chip8_sys* chip8, struct ops* ops)
+{
+    uint8_t number = chip8->registers[ops->X];
+
+    uint8_t o = number % 10;
+    number /= 10;
+
+    uint8_t t = number % 10;
+    number /= 10;
+
+    chip8->memory[chip8->index] = number;
+    chip8->memory[chip8->index + 1] = t;
+    chip8->memory[chip8->index + 2] = o;
+}
+
+/* store the value from range V0 - VX inclusive to address stored in index reg
+ */
+void instruction_fx55(struct chip8_sys* chip8, struct ops* ops)
+{
+    memcpy(&chip8->memory[chip8->index], chip8->registers, ops->X + 1);
+    // implement this quirk
+    // chip8->index += (ops->X + 1);
+}
+
+/* store values from memory address in index reg to range V0 - VX */
+void instruction_fx65(struct chip8_sys* chip8, struct ops* ops)
+{
+    memcpy(&chip8->registers[0], &chip8->memory[chip8->index], ops->X + 1);
+    // implement this quirk
+    // chip8->index += (ops->X + 1);
 }

@@ -8,7 +8,8 @@
 #include "helpers.h"
 #include <string.h>
 
-void instruction_00e0(struct chip8_sys* chip8, struct ops* ops);
+void instruction_00e0(struct chip8_sys* chip8, struct ops* ops,
+                      SDL_mutex* pixels_mutex);
 void instruction_00ee(struct chip8_sys* chip8, struct ops* ops);
 void instruction_1nnn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_2nnn(struct chip8_sys* chip8, struct ops* ops);
@@ -31,5 +32,16 @@ void instruction_annn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_bnnn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_cxnn(struct chip8_sys* chip8, struct ops* ops);
 void instruction_dxyn(struct state* s);
+void instruction_ex9e(struct state* s);
+void instruction_exa1(struct state* s);
+void instruction_fx07(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx0a(struct state* s);
+void instruction_fx15(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx18(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx1e(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx29(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx33(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx55(struct chip8_sys* chip8, struct ops* ops);
+void instruction_fx65(struct chip8_sys* chip8, struct ops* ops);
 
 #endif

@@ -57,7 +57,7 @@ int create_window(unsigned int height, unsigned int width,
 
     /* Set pixel color on scren, also store the pixels array in sdl_objs
      * so it can be used elsewhere */
-    uint32_t* pixels = malloc(DISPW * DISPH * sizeof(uint32_t));
+    uint32_t* pixels = malloc(DISPW * DISPH * sizeof(*pixels));
 
     for (int i = 0; i < DISPH * DISPW; i++)
         pixels[i] = 0x282c34ff; // one-dark theme background
@@ -67,7 +67,7 @@ int create_window(unsigned int height, unsigned int width,
     /* Update the texture and then copy the texture to renderer on window and
      * then present it */
     if (SDL_UpdateTexture(sdl_objs->texture, NULL, pixels,
-                          DISPH * sizeof(uint32_t))) {
+                          DISPH * sizeof(*pixels))) {
         fprintf(stderr, "Couldn't update texture: %s\n", SDL_GetError());
         return 1;
     }

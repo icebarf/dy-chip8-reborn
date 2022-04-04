@@ -7,6 +7,8 @@
 enum constants {
     FALSE = 0,
     TRUE = 1,
+    DOWN = 0,
+    UP = 1,
     INST_CNT = 35,
     DISPW = 64,
     DISPH = 32,
@@ -59,6 +61,11 @@ struct sdl_objs {
     SDL_Renderer* renderer;
     SDL_Texture* texture;
     uint32_t* pixels;
+};
+
+struct atoms {
+    SDL_atomic_t* run;
+    SDL_atomic_t* timer;
 };
 
 struct state {

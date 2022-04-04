@@ -14,7 +14,13 @@ and anything else that I may wish to do in the future.
 
 # Usage
 
-*To be functional yet*
+Currently the emulator is in the beta. Emulator passes all test ROMs borrowed from the Emudev Discord server.
+
+You can obtain the games from [this link](https://johnearnest.github.io/chip8Archive/)
+
+```sh
+$ bin/chip8-rb-0.0.7-beta path/to/romfile.ch8
+```
 
 # Dependencies
 

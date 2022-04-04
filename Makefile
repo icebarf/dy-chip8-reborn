@@ -10,10 +10,10 @@ SRC := src
 # Release mode and flags
 DEBUG := -g3 -fsanitize=thread
 RELEASE := -O2 -fomit-frame-pointer -flto
-MODE:=$(DEBUG)
+MODE:=$(RELEASE)
 
 # Output file
-VER := 0.0.6-alpha
+VER := 0.0.7-beta
 A.OUT := chip8-rb-$(VER)
 ifeq ($(OS),Windows_NT)
 	A.OUT := chip8-rb-$(VER).exe

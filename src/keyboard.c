@@ -1,9 +1,15 @@
 #include "keyboard.h"
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_stdinc.h>
+#include <stdio.h>
 
 void check_and_modify_keystate(const Uint8* state, struct state* s)
 {
+    if (state == NULL) {
+        fprintf(stderr, "Invalid Keyboard state passed while handling input\n");
+        return;
+    }
+
     /* 1    2    3    4*/
     if (state[SDL_SCANCODE_1])
         s->keystates[0x1] = TRUE;
