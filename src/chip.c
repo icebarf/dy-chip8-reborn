@@ -306,7 +306,7 @@ static int draw_to_display_thread(void* arg)
             for (uint16_t i = 0; i < DISPW * DISPH; i++) {
                 if (s->chip8->display[i])
                     s->sdl_objs->pixels[i] =
-                        s->sdl_objs->color; // one dark theme red
+                        0x61afefff;
                 else
                     s->sdl_objs->pixels[i] = 0x282c34ff;
             }
