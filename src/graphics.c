@@ -56,7 +56,7 @@ int create_window(unsigned int height, unsigned int width,
     uint32_t* pixels = malloc(DISPW * DISPH * sizeof(*pixels));
 
     for (int i = 0; i < DISPH * DISPW; i++)
-        pixels[i] = sdl_objs->color; // one-dark theme background
+        pixels[i] = 0x282c34ff; // one-dark theme background
 
     sdl_objs->pixels = pixels;
 
