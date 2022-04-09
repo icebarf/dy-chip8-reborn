@@ -10,6 +10,7 @@ endif
 
 CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
 
+#DEBUG:=1
 # Release mode and flags
 ifeq ($(DEBUG),1)
 	CFLAGS += -g3 -fsanitize=thread,undefined

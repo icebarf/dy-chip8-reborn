@@ -117,11 +117,11 @@ void decode_execute(struct state* s)
         switch (s->ops->NN) {
 
         case 0xE0:
-            instruction_00e0(s->chip8, s->ops, s->pixels_mutex);
+            instruction_00e0(s);
             break;
 
         case 0xEE:
-            instruction_00ee(s->chip8, s->ops);
+            instruction_00ee(s->chip8);
             break;
         }
         break;
@@ -293,49 +293,30 @@ static int timer_thread(void* arg)
     return TRUE;
 }
 
-static int draw_to_display_thread(void* arg)
+void draw_to_display_thread(struct state* s)
 {
-    struct state* s = (struct state*)arg;
 
-    while (SDL_AtomicGet(&s->run)) {
-
-        if (SDL_AtomicGet(&s->DrawFL)) {
-
-            SDL_LockMutex(s->pixels_mutex);
-
-            for (uint16_t i = 0; i < DISPW * DISPH; i++) {
-                if (s->chip8->display[i])
-                    s->sdl_objs->pixels[i] =
-                        0x61afefff;
-                else
-                    s->sdl_objs->pixels[i] = 0x282c34ff;
-            }
-
-            SDL_RenderClear(s->sdl_objs->renderer);
-
-            SDL_UpdateTexture(s->sdl_objs->texture, NULL, s->sdl_objs->pixels,
-                              DISPW * sizeof(*s->sdl_objs->pixels));
-
-            SDL_RenderCopy(s->sdl_objs->renderer, s->sdl_objs->texture, NULL,
-                           NULL);
-
-            SDL_RenderPresent(s->sdl_objs->renderer);
-
-            SDL_AtomicSet(&s->DrawFL, FALSE);
-            SDL_UnlockMutex(s->pixels_mutex);
-        }
+    for (uint16_t i = 0; i < DISPW * DISPH; i++) {
+        if (s->chip8->display[i])
+            s->sdl_objs->pixels[i] = 0x61afefff;
+        else
+            s->sdl_objs->pixels[i] = 0x282c34ff;
     }
 
-    return TRUE;
+    SDL_RenderClear(s->sdl_objs->renderer);
+
+    SDL_UpdateTexture(s->sdl_objs->texture, NULL, s->sdl_objs->pixels,
+                      DISPW * sizeof(*s->sdl_objs->pixels));
+
+    SDL_RenderCopy(s->sdl_objs->renderer, s->sdl_objs->texture, NULL, NULL);
+
+    SDL_RenderPresent(s->sdl_objs->renderer);
+
+    s->DrawFL = FALSE;
 }
 
-static int emulator_thread(void* arg)
+void emulator(struct state* state)
 {
-    assert(arg != NULL);
-
-    struct state* state = (struct state*)arg;
-    SDL_LockMutex(state->main_mutex);
-
     while (SDL_AtomicGet(&state->run) == TRUE) {
         fetch(state);
         decode_execute(state);
@@ -345,10 +326,8 @@ static int emulator_thread(void* arg)
         int keycnt = 0;
 
         switch (event.type) {
-
         case SDL_QUIT:
             SDL_AtomicSet(&state->run, FALSE);
-            SDL_UnlockMutex(state->main_mutex);
             break;
 
         case SDL_KEYUP:
@@ -359,11 +338,11 @@ static int emulator_thread(void* arg)
             check_and_modify_keystate(SDL_GetKeyboardState(&keycnt), state);
             break;
         }
+        if (state->DrawFL)
+            draw_to_display_thread(state);
         // implement this quirk
         SDL_Delay(01);
     }
-
-    return TRUE;
 }
 
 int main(int argc, char** argv)
@@ -392,7 +371,6 @@ int main(int argc, char** argv)
 
     /* initialise video*/
     struct sdl_objs sdl_objs = {0};
-    SDL_mutex* pixel_mutex = SDL_CreateMutex();
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         fprintf(stderr, "Could not init SDL Video: %s\n", SDL_GetError());
@@ -407,19 +385,13 @@ int main(int argc, char** argv)
     struct ops op = {0};
     static struct state state = {.chip8 = &chip8, .keystates = {0}};
     state.sdl_objs = &sdl_objs;
-    state.pixels_mutex = pixel_mutex;
-    state.main_mutex = SDL_CreateMutex();
-    if (state.main_mutex == NULL) {
-        fprintf(stderr, "Unable to create mutex 'main_mutex'\n");
-        return -1;
-    }
     state.ops = &op;
     SDL_AtomicSet(&state.run, TRUE);
-    SDL_AtomicSet(&state.DrawFL, FALSE);
+    state.DrawFL = FALSE;
 
     /* Threads */
-    int st_thread_rtval, dt_thread_rtval, emu_thread_rtval, dsp_thread_rtval;
-    SDL_Thread *st_thread, *dt_thread, *emu_thread, *dsp_thread;
+    int st_thread_rtval, dt_thread_rtval;
+    SDL_Thread *st_thread, *dt_thread;
 
     /* for timer threads */
     struct atoms atomics_dt = {.run = &state.run, .timer = &chip8.delay_timer};
@@ -445,41 +417,12 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    /* emulator display renderer thread*/
-    if ((dsp_thread = SDL_CreateThread(draw_to_display_thread, "DisplayThread",
-                                       (void*)&state)) == NULL) {
-
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Could not create display renderer thread: %s",
-                     SDL_GetError());
-        SDL_AtomicSet(&state.run, FALSE);
-        return -1;
-    }
-
-    /* emulator main execution thread*/
-    if ((emu_thread = SDL_CreateThread(emulator_thread, "CHIP8-Thread",
-                                       (void*)&state)) == NULL) {
-
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Could not create main emulator thread: %s",
-                     SDL_GetError());
-        SDL_AtomicSet(&state.run, FALSE);
-        return -1;
-    }
-
-    SDL_Delay(100);
-
-    /* block the thread until we wish to exit */
-    SDL_LockMutex(state.main_mutex);
-    SDL_UnlockMutex(state.main_mutex);
+    /* Run the emulator */
+    emulator(&state);
 
     /* On exit */
     SDL_WaitThread(dt_thread, &dt_thread_rtval);
     SDL_WaitThread(st_thread, &st_thread_rtval);
-    SDL_WaitThread(dsp_thread, &dsp_thread_rtval);
-    SDL_WaitThread(emu_thread, &emu_thread_rtval);
-    video_cleanup(&sdl_objs, pixel_mutex);
-    SDL_DestroyMutex(pixel_mutex);
-    SDL_DestroyMutex(state.main_mutex);
+    video_cleanup(&sdl_objs);
     return 0;
 }

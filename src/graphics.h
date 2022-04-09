@@ -15,5 +15,5 @@
 int create_window(unsigned int height, unsigned int width,
                   struct sdl_objs* sdl_objs);
 
-void video_cleanup(struct sdl_objs* sdl_objs, SDL_mutex* pixel_mutex);
+void video_cleanup(struct sdl_objs* sdl_objs);
 #endif

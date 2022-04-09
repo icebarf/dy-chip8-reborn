@@ -7,7 +7,7 @@ int create_window(unsigned int height, unsigned int width,
                   struct sdl_objs* sdl_objs)
 {
     /* set drawing color */
-    sdl_objs->color = 0xc678ddff;
+    sdl_objs->color = 0x61afefff;
 
     /* Create window */
     sdl_objs->screen =
@@ -78,13 +78,11 @@ int create_window(unsigned int height, unsigned int width,
     return 0;
 }
 
-void video_cleanup(struct sdl_objs* sdl_objs, SDL_mutex* pixel_mutex)
+void video_cleanup(struct sdl_objs* sdl_objs)
 {
-    SDL_LockMutex(pixel_mutex);
     SDL_DestroyTexture(sdl_objs->texture);
     SDL_DestroyRenderer(sdl_objs->renderer);
     SDL_DestroyWindow(sdl_objs->screen);
     SDL_Quit();
     free(sdl_objs->pixels);
-    SDL_UnlockMutex(pixel_mutex);
 }

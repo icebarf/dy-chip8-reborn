@@ -73,11 +73,9 @@ struct state {
     struct chip8_sys* chip8;
     struct ops* ops;
     struct sdl_objs* sdl_objs;
-    SDL_mutex* pixels_mutex;
-    SDL_mutex* main_mutex;
     SDL_atomic_t run;
     uint8_t keystates[KEYS];
-    SDL_atomic_t DrawFL;
+    uint8_t DrawFL;
 };
 
 #endif
