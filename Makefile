@@ -1,46 +1,43 @@
-# Simple Makefile by rdseed (Amritpal Singh)
-# Will be used in future projects
-CC := gcc
+.PHONY: clean
+
+VER := 0.0.8-beta
+
+ifeq ($(OS),Windows_NT)
+    BIN := chip8-rb-$(VER).exe
+else
+    BIN := chip8-rb-$(VER)
+endif
+
 CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
 
-# Directories
-BIN := bin
-SRC := src
-
 # Release mode and flags
-DEBUG := -g3 -fsanitize=thread
-RELEASE := -O2 -fomit-frame-pointer -flto
-MODE:=$(RELEASE)
-
-# Output file
-VER := 0.0.8-beta
-A.OUT := chip8-rb-$(VER)
-ifeq ($(OS),Windows_NT)
-	A.OUT := chip8-rb-$(VER).exe
+ifeq ($(DEBUG),1)
+	CFLAGS += -g3 -fsanitize=thread,undefined
+else
+	CFLAGS += -O3 -flto
 endif
 
 # Third Party Library Flags
-LIB := sdl2
-PKGCONFIG := `pkg-config --libs --cflags $(LIB)`
+CFLAGS += `sdl2-config --cflags`
+LDFLAGS += `sdl2-config --libs`
 
-# Name of files present under src in order they depend on each other
-OBJECTS := chip.o graphics.o helpers.o keyboard.o
+OBJ = \
+	src/chip.o \
+	src/graphics.o \
+	src/helpers.o \
+	src/keyboard.o
 
-.PHONY: all binary dir clean
+# Track header file dependency changes
+DEP = $(OBJ:.o=.d)
+-include $(DEP)
 
-.DEFAULT_GOAL: all
+all: $(BIN)
 
-all: dir $(OBJECTS) binary
+.c.o:
+	$(CC) $(CFLAGS) $(CPPFLAGS) -MD -c $< -o $@
 
-dir:
-	mkdir -p bin
-
-%.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) $(MODE) -c $< -o $(BIN)/$@
-
-
-binary: $(BIN)/$(OBJECTS)
-	$(CC) $(CFLAGS) $(BIN)/*.o $(MODE) -o $(BIN)/$(A.OUT) $(PKGCONFIG)
+$(BIN): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
 
 clean:
-	rm $(BIN)/*.o
+	rm -f $(BIN) $(DEP) $(OBJ)
