@@ -1,47 +1,328 @@
-/* Function Declarations of the chip-8 instructions for dy-chip8-reborn
- * For what the functions do - visit the source file.
+#ifndef REBORN_CHPI_INSTRUCTIONS_IMPL
+#define REBORN_CHPI_INSTRUCTIONS_IMPL
+/* Implementation of the chip-8 instructions for dy-chip8-reborn
+ * Author: Amritpal Singh (C) 2022
+ * For a list of instructions and what they do please visit any of the following
+ * links:
+ * https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Instruction-Set
+ * http://johnearnest.github.io/Octo/docs/chip8ref.pdf
+ *
  */
 
-#ifndef REBORN_CHIP_INSTRUCTIONS_H
-#define REBORN_CHIP_INSTRUCTIONS_H
 #include "chip.h"
 #include "helpers.h"
-#include <string.h>
+#include <SDL2/SDL_atomic.h>
+#include <SDL2/SDL_mutex.h>
+#include <stdint.h>
+#include <time.h>
 
-void instruction_00e0(struct chip8_sys* chip8, struct ops* ops,
-                      SDL_mutex* pixels_mutex);
-void instruction_00ee(struct chip8_sys* chip8, struct ops* ops);
-void instruction_1nnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_2nnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_3xnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_4xnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_5xy0(struct chip8_sys* chip8, struct ops* ops);
-void instruction_6xnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_7xnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy0(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy1(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy2(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy3(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy4(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy5(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy6(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xy7(struct chip8_sys* chip8, struct ops* ops);
-void instruction_8xye(struct chip8_sys* chip8, struct ops* ops);
-void instruction_9xy0(struct chip8_sys* chip8, struct ops* ops);
-void instruction_annn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_bnnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_cxnn(struct chip8_sys* chip8, struct ops* ops);
-void instruction_dxyn(struct state* s);
-void instruction_ex9e(struct state* s);
-void instruction_exa1(struct state* s);
-void instruction_fx07(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx0a(struct state* s);
-void instruction_fx15(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx18(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx1e(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx29(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx33(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx55(struct chip8_sys* chip8, struct ops* ops);
-void instruction_fx65(struct chip8_sys* chip8, struct ops* ops);
+/* clear screen */
+inline void instruction_00e0(struct chip8_sys* chip8, struct ops* op,
+                             SDL_mutex* pixels_mutex)
+{
+    (void)op;
+    SDL_LockMutex(pixels_mutex);
+    memset(chip8->display, 0, DISPLAY_SIZE);
+    SDL_UnlockMutex(pixels_mutex);
+}
+
+/* return from subroutine */
+inline void instruction_00ee(struct chip8_sys* chip8, struct ops* op)
+{
+    (void)op;
+    chip8->program_counter = pop(chip8);
+}
+
+/* jump to address */
+inline void instruction_1nnn(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->program_counter = op->NNN;
+}
+
+/* call function at address */
+inline void instruction_2nnn(struct chip8_sys* chip8, struct ops* op)
+{
+    push(chip8, chip8->program_counter);
+    instruction_1nnn(chip8, op);
+}
+
+/* skip instruction if VX == NN */
+inline void instruction_3xnn(struct chip8_sys* chip8, struct ops* op)
+{
+    if (chip8->registers[op->X] == op->NN)
+        chip8->program_counter += 2;
+}
+
+/* skip instruction if VX != NN */
+inline void instruction_4xnn(struct chip8_sys* chip8, struct ops* op)
+{
+    if (chip8->registers[op->X] != op->NN)
+        chip8->program_counter += 2;
+}
+
+/* skip instruction if VX == XY */
+inline void instruction_5xy0(struct chip8_sys* chip8, struct ops* op)
+{
+    if (chip8->registers[op->X] == chip8->registers[op->Y])
+        chip8->program_counter += 2;
+}
+
+/* store NN in VX*/
+inline void instruction_6xnn(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[op->X] = op->NN;
+}
+
+/* add NN to VX*/
+inline void instruction_7xnn(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[op->X] += op->NN;
+}
+
+/* store VY in VX */
+inline void instruction_8xy0(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[op->X] = chip8->registers[op->Y];
+}
+
+/* set VX = VX OR VY */
+inline void instruction_8xy1(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[op->X] |= chip8->registers[op->Y];
+}
+
+/* set VX = VX AND VY */
+inline void instruction_8xy2(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[op->X] &= chip8->registers[op->Y];
+}
+
+/* set VX = VX XOR VY */
+inline void instruction_8xy3(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[op->X] ^= chip8->registers[op->Y];
+}
+
+/* add VY to VX and set carry flag (VF) */
+inline void instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[0xF] =
+        (chip8->registers[op->X] > UINT8_MAX - chip8->registers[op->Y]);
+
+    chip8->registers[op->X] += chip8->registers[op->Y];
+}
+
+/* sub VY from VX and set VF if it does not borrow */
+inline void instruction_8xy5(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[0xF] = 1;
+
+    if (chip8->registers[op->X] < chip8->registers[op->Y])
+        chip8->registers[0xF] = 0;
+
+    chip8->registers[op->X] -= chip8->registers[op->Y];
+}
+
+/* Set Vx = Vx SHR 1. Set VF to LSB*/
+inline void instruction_8xy6(struct chip8_sys* chip8, struct ops* op)
+{
+    // remember to implement quirk - ignore VY or not
+    chip8->registers[0xF] = 0;
+
+    if (chip8->registers[op->X] & 0b1)
+        chip8->registers[0xF] = 1;
+
+    chip8->registers[op->X] >>= 1;
+}
+
+/* sub VX from VY and set VF if it does not borrow */
+inline void instruction_8xy7(struct chip8_sys* chip8, struct ops* op)
+{
+    /* Assume it does not borrow*/
+    chip8->registers[0xF] = 1;
+
+    /* Well if it does then just unset or 0*/
+    if (chip8->registers[op->Y] < chip8->registers[op->X])
+        chip8->registers[0xF] = 0;
+
+    chip8->registers[op->X] = chip8->registers[op->Y] - chip8->registers[op->X];
+}
+
+/* Set Vx = Vx SHL 1. Set VF to MSB*/
+inline void instruction_8xye(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->registers[0xF] = 0;
+
+    // remember to implement quirk here - ignore VY or not
+    if (chip8->registers[op->X] & 0b10000000)
+        chip8->registers[0xF] = 1;
+
+    chip8->registers[op->X] <<= 1;
+}
+
+/* skip instruction if VX != XY */
+inline void instruction_9xy0(struct chip8_sys* chip8, struct ops* op)
+{
+    if (chip8->registers[op->X] != chip8->registers[op->Y])
+        chip8->program_counter += 2;
+}
+
+/* Store address in Register I */
+inline void instruction_annn(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->index = op->NNN;
+}
+
+/* Jump to address NNN + V0 */
+inline void instruction_bnnn(struct chip8_sys* chip8, struct ops* op)
+{
+    chip8->program_counter = op->NNN + chip8->registers[0];
+}
+
+/* Set VX to random number masked with NN */
+inline void instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
+{
+    // debug
+    uint8_t rnd = rand() % UINT8_MAX;
+    chip8->registers[op->X] = (rnd)&op->NN;
+}
+
+/* draw sprite at (VX,VY) with sprite data from address stored at VI*/
+inline void instruction_dxyn(struct state* s)
+{
+    SDL_LockMutex(s->pixels_mutex);
+
+    uint8_t x = s->chip8->registers[s->ops->X] & (DISPW - 1);
+    uint8_t y = s->chip8->registers[s->ops->Y] & (DISPH - 1);
+
+    s->chip8->registers[0xF] = 0;
+
+    for (int h = 0; h < s->ops->N; h++) {
+        /* dont draw on the bottom edge */
+        if (h + y >= DISPH)
+            continue;
+
+        uint16_t pixel = s->chip8->memory[s->chip8->index + h];
+
+        for (int w = 0; w < 8; w++) {
+
+            /* dont draw on the right edge */
+            if (w + x >= DISPW)
+                continue;
+
+            /* if the pixel to be rendered is not zero */
+            if (pixel & (0x80 >> w)) {
+                /* if the pixel already on display is one
+                 * then set VF to 1 to indicate collision
+                 */
+                if (s->chip8->display[(x + w) + ((y + h) * DISPW)])
+                    s->chip8->registers[0xF] = 1;
+
+                /* Simply XOR with pixel since its known that
+                 * pixel on display is already zero
+                 */
+                s->chip8->display[(x + w) + ((y + h) * DISPW)] ^= 1;
+            }
+        }
+    }
+
+    SDL_AtomicSet(&s->DrawFL, TRUE);
+    SDL_UnlockMutex(s->pixels_mutex);
+}
+
+/* skip next instruction if key in VX is UP*/
+inline void instruction_ex9e(struct state* s)
+{
+    if (s->keystates[s->chip8->registers[s->ops->X]] == UP)
+        s->chip8->program_counter += 2;
+}
+
+/* skip next instruction if key in VX is DOWN*/
+inline void instruction_exa1(struct state* s)
+{
+    if (s->keystates[s->chip8->registers[s->ops->X]] == DOWN)
+        s->chip8->program_counter += 2;
+}
+
+/* Store the current value of delay timer in VX */
+inline void instruction_fx07(struct chip8_sys* chip8, struct ops* ops)
+{
+    chip8->registers[ops->X] = SDL_AtomicGet(&chip8->delay_timer);
+}
+
+/* wait for a keypress, when pressed store the result in VX */
+inline void instruction_fx0a(struct state* s)
+{
+    s->chip8->program_counter -= 2;
+
+    for (uint8_t i = 0x0; i < 0x10; i++) {
+
+        if (s->keystates[i] == UP) {
+
+            s->chip8->registers[s->ops->X] = i;
+            s->chip8->program_counter += 2;
+        }
+    }
+}
+
+/* set delay timer to VX */
+inline void instruction_fx15(struct chip8_sys* chip8, struct ops* ops)
+{
+    SDL_AtomicSet(&chip8->delay_timer, chip8->registers[ops->X]);
+}
+
+/* set sound timer to VX */
+inline void instruction_fx18(struct chip8_sys* chip8, struct ops* ops)
+{
+    SDL_AtomicSet(&chip8->sound_timer, chip8->registers[ops->X]);
+}
+
+/* add VX to index_register */
+inline void instruction_fx1e(struct chip8_sys* chip8, struct ops* ops)
+{
+    chip8->index += chip8->registers[ops->X];
+}
+
+/* set index to the memory location of the sprite, which is a hex digit stored
+ * in VX */
+inline void instruction_fx29(struct chip8_sys* chip8, struct ops* ops)
+{
+    chip8->index = 5 * (chip8->registers[ops->X] & 15);
+}
+
+/* store VX in BCD format at memory i, i+1, i+2 respectively for H,T,O
+ * BCD - Binary Coded Decimal
+ * HTO - Hundreds Tens Ones */
+inline void instruction_fx33(struct chip8_sys* chip8, struct ops* ops)
+{
+    uint8_t number = chip8->registers[ops->X];
+
+    uint8_t o = number % 10;
+    number /= 10;
+
+    uint8_t t = number % 10;
+    number /= 10;
+
+    chip8->memory[chip8->index] = number;
+    chip8->memory[chip8->index + 1] = t;
+    chip8->memory[chip8->index + 2] = o;
+}
+
+/* store the value from range V0 - VX inclusive to address stored in index reg
+ */
+inline void instruction_fx55(struct chip8_sys* chip8, struct ops* ops)
+{
+    memcpy(&chip8->memory[chip8->index], chip8->registers, ops->X + 1);
+    // implement this quirk
+    // chip8->index += (ops->X + 1);
+}
+
+/* store values from memory address in index reg to range V0 - VX */
+inline void instruction_fx65(struct chip8_sys* chip8, struct ops* ops)
+{
+    memcpy(&chip8->registers[0], &chip8->memory[chip8->index], ops->X + 1);
+    // implement this quirk
+    // chip8->index += (ops->X + 1);
+}
 
 #endif

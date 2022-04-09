@@ -7,3 +7,4 @@ outfile.txt
 lib/termbox2/*
 chip
 examples/
+bin/*.o

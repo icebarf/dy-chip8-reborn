@@ -305,7 +305,8 @@ static int draw_to_display_thread(void* arg)
 
             for (uint16_t i = 0; i < DISPW * DISPH; i++) {
                 if (s->chip8->display[i])
-                    s->sdl_objs->pixels[i] = 0x61afefff; // one dark theme blue
+                    s->sdl_objs->pixels[i] =
+                        s->sdl_objs->color; // one dark theme red
                 else
                     s->sdl_objs->pixels[i] = 0x282c34ff;
             }
@@ -359,7 +360,7 @@ static int emulator_thread(void* arg)
             break;
         }
         // implement this quirk
-        SDL_Delay(10);
+        SDL_Delay(01);
     }
 
     return TRUE;
@@ -371,17 +372,16 @@ int main(int argc, char** argv)
         puts("Usage: chip8 romfile.ch8");
         return 0;
     }
-
     srand(time(NULL));
 
     static struct chip8_sys chip8 = {0};
-
     chip8.stacktop = -1;
     load_font(&chip8);
 
     /* Programs have write access in memory from address 512(0x200) */
     chip8.program_counter = 0x200;
 
+    /* Emulator Initialisation */
     SDL_AtomicSet(&chip8.delay_timer, 0);
     SDL_AtomicSet(&chip8.sound_timer, 0);
 
@@ -399,14 +399,13 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (create_window(DISPH * 10, DISPW * 10, &sdl_objs)) {
+    if (create_window(DISPH * 15, DISPW * 15, &sdl_objs)) {
         return -1;
     }
 
     /* Populate the state struct */
     struct ops op = {0};
     static struct state state = {.chip8 = &chip8, .keystates = {0}};
-
     state.sdl_objs = &sdl_objs;
     state.pixels_mutex = pixel_mutex;
     state.main_mutex = SDL_CreateMutex();
@@ -415,7 +414,6 @@ int main(int argc, char** argv)
         return -1;
     }
     state.ops = &op;
-
     SDL_AtomicSet(&state.run, TRUE);
     SDL_AtomicSet(&state.DrawFL, FALSE);
 
@@ -469,6 +467,9 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    SDL_Delay(100);
+
+    /* block the thread until we wish to exit */
     SDL_LockMutex(state.main_mutex);
     SDL_UnlockMutex(state.main_mutex);
 
@@ -477,7 +478,6 @@ int main(int argc, char** argv)
     SDL_WaitThread(st_thread, &st_thread_rtval);
     SDL_WaitThread(dsp_thread, &dsp_thread_rtval);
     SDL_WaitThread(emu_thread, &emu_thread_rtval);
-
     video_cleanup(&sdl_objs, pixel_mutex);
     SDL_DestroyMutex(pixel_mutex);
     SDL_DestroyMutex(state.main_mutex);

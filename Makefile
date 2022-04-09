@@ -1,7 +1,7 @@
 # Simple Makefile by rdseed (Amritpal Singh)
 # Will be used in future projects
 CC := gcc
-CFLAGS += -Wall -Wextra -Wpedantic
+CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
 
 # Directories
 BIN := bin
@@ -13,7 +13,7 @@ RELEASE := -O2 -fomit-frame-pointer -flto
 MODE:=$(RELEASE)
 
 # Output file
-VER := 0.0.7-beta
+VER := 0.0.8-beta
 A.OUT := chip8-rb-$(VER)
 ifeq ($(OS),Windows_NT)
 	A.OUT := chip8-rb-$(VER).exe
@@ -24,7 +24,7 @@ LIB := sdl2
 PKGCONFIG := `pkg-config --libs --cflags $(LIB)`
 
 # Name of files present under src in order they depend on each other
-OBJECTS := chip.o chip_instructions.o graphics.o helpers.o keyboard.o
+OBJECTS := chip.o graphics.o helpers.o keyboard.o
 
 .PHONY: all binary dir clean
 
@@ -36,7 +36,7 @@ dir:
 	mkdir -p bin
 
 %.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) $(MODE) -c $< -o $(BIN)/$@ $(PKGCONFIG)
+	$(CC) $(CFLAGS) $(MODE) -c $< -o $(BIN)/$@
 
 
 binary: $(BIN)/$(OBJECTS)

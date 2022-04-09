@@ -60,6 +60,7 @@ struct sdl_objs {
     SDL_Window* screen;
     SDL_Renderer* renderer;
     SDL_Texture* texture;
+    uint32_t color;
     uint32_t* pixels;
 };
 

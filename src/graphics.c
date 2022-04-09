@@ -1,18 +1,14 @@
 #include "graphics.h"
 #include "chip.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_atomic.h>
-#include <SDL2/SDL_mutex.h>
 #include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_video.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 int create_window(unsigned int height, unsigned int width,
                   struct sdl_objs* sdl_objs)
 {
+    /* set drawing color */
+    sdl_objs->color = 0xc678ddff;
+
     /* Create window */
     sdl_objs->screen =
         SDL_CreateWindow("Chip-8 Reborn", SDL_WINDOWPOS_CENTERED,
@@ -60,7 +56,7 @@ int create_window(unsigned int height, unsigned int width,
     uint32_t* pixels = malloc(DISPW * DISPH * sizeof(*pixels));
 
     for (int i = 0; i < DISPH * DISPW; i++)
-        pixels[i] = 0x282c34ff; // one-dark theme background
+        pixels[i] = sdl_objs->color; // one-dark theme background
 
     sdl_objs->pixels = pixels;
 
