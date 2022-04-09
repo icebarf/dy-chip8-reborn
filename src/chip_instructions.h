@@ -200,7 +200,7 @@ inline void instruction_dxyn(struct state* s)
     for (int h = 0; h < s->ops->N; h++) {
         /* dont draw on the bottom edge */
         if (h + y >= DISPH)
-            return;
+            continue;
 
         uint16_t pixel = s->chip8->memory[s->chip8->index + h];
 
@@ -208,7 +208,7 @@ inline void instruction_dxyn(struct state* s)
 
             /* dont draw on the right edge */
             if (w + x >= DISPW)
-                return;
+                continue;
 
             /* if the pixel to be rendered is not zero */
             if (pixel & (0x80 >> w)) {
