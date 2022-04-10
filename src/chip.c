@@ -345,6 +345,26 @@ void emulator(struct state* state)
     }
 }
 
+void init_emulator(struct chip8_sys* chip8, struct sdl_objs* sdl_objs,
+                   struct ops* op, struct state* state)
+{
+    chip8->stacktop = -1;
+    load_font(chip8);
+
+    /* Programs have write access in memory from address 512(0x200) */
+    chip8->program_counter = 0x200;
+
+    /* Timer Initialisation */
+    SDL_AtomicSet(&chip8->delay_timer, 0);
+    SDL_AtomicSet(&chip8->sound_timer, 0);
+
+    /* Fill remainder of state structure */
+    state->sdl_objs = sdl_objs;
+    state->ops = op;
+    SDL_AtomicSet(&state->run, TRUE);
+    state->DrawFL = FALSE;
+}
+
 int main(int argc, char** argv)
 {
     if (argc < 2) {
@@ -354,15 +374,6 @@ int main(int argc, char** argv)
     srand(time(NULL));
 
     static struct chip8_sys chip8 = {0};
-    chip8.stacktop = -1;
-    load_font(&chip8);
-
-    /* Programs have write access in memory from address 512(0x200) */
-    chip8.program_counter = 0x200;
-
-    /* Emulator Initialisation */
-    SDL_AtomicSet(&chip8.delay_timer, 0);
-    SDL_AtomicSet(&chip8.sound_timer, 0);
 
     int file_size = fetchrom(&chip8, argv[1]);
     if (file_size == -1) {
@@ -383,11 +394,11 @@ int main(int argc, char** argv)
 
     /* Populate the state struct */
     struct ops op = {0};
-    static struct state state = {.chip8 = &chip8, .keystates = {0}};
-    state.sdl_objs = &sdl_objs;
-    state.ops = &op;
-    SDL_AtomicSet(&state.run, TRUE);
-    state.DrawFL = FALSE;
+    static struct state state = {
+        .chip8 = &chip8, .keystates = {0}, .DrawFL = FALSE};
+
+    /* Fill in the rest of the details */
+    init_emulator(&chip8, &sdl_objs, &op, &state);
 
     /* Threads */
     int st_thread_rtval, dt_thread_rtval;
