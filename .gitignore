@@ -8,3 +8,6 @@ lib/termbox2/*
 chip
 examples/
 bin/*.o
+chip8-rb*
+src/*.o
+src/*.d
