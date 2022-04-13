@@ -4,20 +4,7 @@
 #include "helpers.h"
 #include "keyboard.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_atomic.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_keyboard.h>
-#include <SDL2/SDL_mutex.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_thread.h>
-#include <SDL2/SDL_timer.h>
-
 #include <assert.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
  */
@@ -55,13 +42,13 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     FILE* fp = fopen(name, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Unable to find rom: %s\n", name);
-        return -1;
+        return BAD_RETURN_VALUE;
     }
 
     /* seek to the end of file */
     if (fseek(fp, 0L, SEEK_END) != 0) {
         fprintf(stderr, "Unable to SEEK to end of rom file");
-        return -1;
+        return BAD_RETURN_VALUE;
     }
 
     int file_size = ftell(fp);
@@ -69,7 +56,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     /* goes back */
     if (fseek(fp, 0L, SEEK_SET) != 0) {
         fprintf(stderr, "Unable to return to where we SEEK'd from");
-        return -1;
+        return BAD_RETURN_VALUE;
     }
 
     /* each chip8 instruction is two bytes long */
@@ -78,13 +65,19 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) !=
         (unsigned long)(file_size / inst_byte)) {
         fprintf(stderr, "Error while reading rom to memory");
-        return -1;
+        return BAD_RETURN_VALUE;
     }
 
     fclose(fp);
     return file_size;
 }
 
+/**
+ * fetches the instruction to be executed.
+ * also sets the operands (ops) structure.
+ * magic constants used here are different mask values to obtain
+ * various required bits of the 16-bit opcode on which the instructions operate
+ **/
 void fetch(struct state* s)
 {
     s->ops->opcode = (s->chip8->memory[s->chip8->program_counter] << 8) |
@@ -270,30 +263,11 @@ void decode_execute(struct state* s)
         break;
 
     default:
-        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: %x",
-                s->ops->opcode);
+        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: %x", s->ops->opcode);
     }
 }
 
-static int timer_thread(void* arg)
-{
-    assert(arg != NULL);
-
-    struct atoms* atomics = (struct atoms*)arg;
-
-    while (SDL_AtomicGet(atomics->run)) {
-        uint8_t zero = SDL_AtomicGet(atomics->timer) == 0;
-
-        if (!zero) {
-            SDL_AtomicDecRef(atomics->timer);
-            SDL_Delay(17);
-        }
-    }
-
-    return TRUE;
-}
-
-void draw_to_display_thread(struct state* s)
+void draw_to_display(struct state* s)
 {
 
     for (uint16_t i = 0; i < DISPW * DISPH; i++) {
@@ -315,54 +289,88 @@ void draw_to_display_thread(struct state* s)
     s->DrawFL = FALSE;
 }
 
+struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
+                                 struct sdl_objs* sdl_objs, struct ops* op)
+{
+    /* verify received arguements aren't NULL pointers */
+    assert(ROM);
+    assert(chip8);
+    assert(sdl_objs);
+    assert(op);
+
+    /* Fill the state structure */
+    struct state state = {0};
+
+    state.chip8 = chip8;
+    state.ops = op;
+    state.run = TRUE;
+    state.sdl_objs = sdl_objs;
+    state.DrawFL = FALSE;
+
+    /* chip8 structure initialisation */
+    load_font(state.chip8);
+    state.chip8->stacktop = INITIAL_STACK_TOP_LOCATION;
+    state.chip8->program_counter = PROGRAM_LOAD_ADDRESS;
+    if (fetchrom(chip8, ROM) == BAD_RETURN_VALUE) {
+        exit(1);
+    }
+
+    /* sdl objects structure initialisation */
+    *state.sdl_objs = create_window(DISPH * 15, DISPW * 15);
+
+    /* Current time seed */
+    srand(time(NULL));
+
+    return state;
+}
+
 void emulator(struct state* state)
 {
-    while (SDL_AtomicGet(&state->run) == TRUE) {
+    while (state->run == TRUE) {
+        /* Timing counters */
+        state->current_time = SDL_GetPerformanceCounter();
+
+        state->delta_time = state->current_time - state->previous_time;
+        state->delta_accumulation += state->delta_time;
+
+        state->previous_time = state->current_time;
+
         fetch(state);
         decode_execute(state);
 
         SDL_Event event;
         SDL_PollEvent(&event);
-        int keycnt = 0;
 
         switch (event.type) {
         case SDL_QUIT:
-            SDL_AtomicSet(&state->run, FALSE);
+            state->run = FALSE;
             break;
 
         case SDL_KEYUP:
-            check_and_modify_keystate(SDL_GetKeyboardState(&keycnt), state);
+            check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
             break;
 
         case SDL_KEYDOWN:
-            check_and_modify_keystate(SDL_GetKeyboardState(&keycnt), state);
+            check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
             break;
         }
+
         if (state->DrawFL)
-            draw_to_display_thread(state);
+            draw_to_display(state);
+
+        while (state->delta_accumulation >= TIMER_DEC_RATE) {
+            if (state->chip8->delay_timer > 0)
+                --state->chip8->delay_timer;
+
+            if (state->chip8->sound_timer > 0)
+                --state->chip8->sound_timer;
+
+            state->delta_accumulation -= TIMER_DEC_RATE;
+        }
+
         // implement this quirk
         SDL_Delay(01);
     }
-}
-
-void init_emulator(struct chip8_sys* chip8, struct sdl_objs* sdl_objs,
-                   struct ops* op, struct state* state)
-{
-    chip8->stacktop = -1;
-    load_font(chip8);
-
-    /* Programs have write access in memory from address 512(0x200) */
-    chip8->program_counter = 0x200;
-
-    /* Timer Initialisation */
-    SDL_AtomicSet(&chip8->delay_timer, 0);
-    SDL_AtomicSet(&chip8->sound_timer, 0);
-
-    /* Fill remainder of state structure */
-    state->sdl_objs = sdl_objs;
-    state->ops = op;
-    SDL_AtomicSet(&state->run, TRUE);
-    state->DrawFL = FALSE;
 }
 
 int main(int argc, char** argv)
@@ -371,69 +379,24 @@ int main(int argc, char** argv)
         puts("Usage: chip8 romfile.ch8");
         return 0;
     }
-    srand(time(NULL));
-
-    static struct chip8_sys chip8 = {0};
-
-    int file_size = fetchrom(&chip8, argv[1]);
-    if (file_size == -1) {
-        return -1;
-    }
 
     /* initialise video*/
-    struct sdl_objs sdl_objs = {0};
-
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         fprintf(stderr, "Could not init SDL Video: %s\n", SDL_GetError());
-        return -1;
+        return BAD_RETURN_VALUE;
     }
 
-    if (create_window(DISPH * 15, DISPW * 15, &sdl_objs)) {
-        return -1;
-    }
-
-    /* Populate the state struct */
+    /* Initilaise the structures */
+    struct chip8_sys chip8 = {0};
+    struct sdl_objs sdl_objs = {0};
     struct ops op = {0};
-    static struct state state = {
-        .chip8 = &chip8, .keystates = {0}, .DrawFL = FALSE};
 
-    /* Fill in the rest of the details */
-    init_emulator(&chip8, &sdl_objs, &op, &state);
-
-    /* Threads */
-    int st_thread_rtval, dt_thread_rtval;
-    SDL_Thread *st_thread, *dt_thread;
-
-    /* for timer threads */
-    struct atoms atomics_dt = {.run = &state.run, .timer = &chip8.delay_timer};
-    struct atoms atomics_st = {.run = &state.run, .timer = &chip8.sound_timer};
-
-    /* delay timer*/
-    if ((dt_thread = SDL_CreateThread(timer_thread, "DelayTimerThread",
-                                      (void*)&atomics_dt)) == NULL) {
-
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Could not create delay timer thread: %s", SDL_GetError());
-        SDL_AtomicSet(&state.run, FALSE);
-        return -1;
-    }
-
-    /* sound timer */
-    if ((st_thread = SDL_CreateThread(timer_thread, "DelayTimerThread",
-                                      (void*)&atomics_st)) == NULL) {
-
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Could not create sound timer thread: %s", SDL_GetError());
-        SDL_AtomicSet(&state.run, FALSE);
-        return -1;
-    }
+    struct state state = initialise_emulator(argv[1], &chip8, &sdl_objs, &op);
 
     /* Run the emulator */
     emulator(&state);
 
     /* On exit */
-    SDL_WaitThread(dt_thread, &dt_thread_rtval);
-    SDL_WaitThread(st_thread, &st_thread_rtval);
     video_cleanup(&sdl_objs);
     return 0;
 }

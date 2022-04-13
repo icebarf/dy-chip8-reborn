@@ -1,96 +1,92 @@
 #include "keyboard.h"
-#include <SDL2/SDL_scancode.h>
-#include <SDL2/SDL_stdinc.h>
-#include <stdio.h>
+#include <assert.h>
 
-void check_and_modify_keystate(const Uint8* state, struct state* s)
+void check_and_modify_keystate(const Uint8* SDL_Keyboard_State, struct state* const emulator_state)
 {
-    if (state == NULL) {
-        fprintf(stderr, "Invalid Keyboard state passed while handling input\n");
-        return;
-    }
+    assert(emulator_state);
+    assert(SDL_Keyboard_State);
 
     /* 1    2    3    4*/
-    if (state[SDL_SCANCODE_1])
-        s->keystates[0x1] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_1])
+        emulator_state->keystates[0x1] = UP;
     else
-        s->keystates[0x1] = FALSE;
+        emulator_state->keystates[0x1] = DOWN;
 
-    if (state[SDL_SCANCODE_2])
-        s->keystates[0x2] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_2])
+        emulator_state->keystates[0x2] = UP;
     else
-        s->keystates[0x2] = FALSE;
+        emulator_state->keystates[0x2] = DOWN;
 
-    if (state[SDL_SCANCODE_3])
-        s->keystates[0x3] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_3])
+        emulator_state->keystates[0x3] = UP;
     else
-        s->keystates[0x3] = FALSE;
+        emulator_state->keystates[0x3] = DOWN;
 
-    if (state[SDL_SCANCODE_4])
-        s->keystates[0xC] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_4])
+        emulator_state->keystates[0xC] = UP;
     else
-        s->keystates[0xC] = FALSE;
+        emulator_state->keystates[0xC] = DOWN;
 
     /* Q    W    E    R */
-    if (state[SDL_SCANCODE_Q])
-        s->keystates[0x4] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_Q])
+        emulator_state->keystates[0x4] = UP;
     else
-        s->keystates[0x4] = FALSE;
+        emulator_state->keystates[0x4] = DOWN;
 
-    if (state[SDL_SCANCODE_W])
-        s->keystates[0x5] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_W])
+        emulator_state->keystates[0x5] = UP;
     else
-        s->keystates[0x5] = FALSE;
+        emulator_state->keystates[0x5] = DOWN;
 
-    if (state[SDL_SCANCODE_E])
-        s->keystates[0x6] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_E])
+        emulator_state->keystates[0x6] = UP;
     else
-        s->keystates[0x6] = FALSE;
+        emulator_state->keystates[0x6] = DOWN;
 
-    if (state[SDL_SCANCODE_R])
-        s->keystates[0xD] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_R])
+        emulator_state->keystates[0xD] = UP;
     else
-        s->keystates[0xD] = FALSE;
+        emulator_state->keystates[0xD] = DOWN;
 
     /* A    S    D    F */
-    if (state[SDL_SCANCODE_A])
-        s->keystates[0x7] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_A])
+        emulator_state->keystates[0x7] = UP;
     else
-        s->keystates[0x7] = FALSE;
+        emulator_state->keystates[0x7] = DOWN;
 
-    if (state[SDL_SCANCODE_S])
-        s->keystates[0x8] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_S])
+        emulator_state->keystates[0x8] = UP;
     else
-        s->keystates[0x8] = FALSE;
+        emulator_state->keystates[0x8] = DOWN;
 
-    if (state[SDL_SCANCODE_D])
-        s->keystates[0x9] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_D])
+        emulator_state->keystates[0x9] = UP;
     else
-        s->keystates[0x9] = FALSE;
+        emulator_state->keystates[0x9] = DOWN;
 
-    if (state[SDL_SCANCODE_F])
-        s->keystates[0xE] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_F])
+        emulator_state->keystates[0xE] = UP;
     else
-        s->keystates[0xE] = FALSE;
+        emulator_state->keystates[0xE] = DOWN;
 
     /* Z    X    C    V */
-    if (state[SDL_SCANCODE_Z])
-        s->keystates[0xA] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_Z])
+        emulator_state->keystates[0xA] = UP;
     else
-        s->keystates[0xA] = FALSE;
+        emulator_state->keystates[0xA] = DOWN;
 
-    if (state[SDL_SCANCODE_X])
-        s->keystates[0x0] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_X])
+        emulator_state->keystates[0x0] = UP;
     else
-        s->keystates[0x0] = FALSE;
+        emulator_state->keystates[0x0] = DOWN;
 
-    if (state[SDL_SCANCODE_C])
-        s->keystates[0xB] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_C])
+        emulator_state->keystates[0xB] = UP;
     else
-        s->keystates[0xB] = FALSE;
+        emulator_state->keystates[0xB] = DOWN;
 
-    if (state[SDL_SCANCODE_V])
-        s->keystates[0xF] = TRUE;
+    if (SDL_Keyboard_State[SDL_SCANCODE_V])
+        emulator_state->keystates[0xF] = UP;
     else
-        s->keystates[0xF] = FALSE;
+        emulator_state->keystates[0xF] = DOWN;
 }

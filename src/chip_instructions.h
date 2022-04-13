@@ -11,8 +11,6 @@
 
 #include "chip.h"
 #include "helpers.h"
-#include <SDL2/SDL_atomic.h>
-#include <SDL2/SDL_mutex.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -102,8 +100,7 @@ static inline void instruction_8xy3(struct chip8_sys* chip8, struct ops* op)
 /* add VY to VX and set carry flag (VF) */
 static inline void instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
 {
-    chip8->registers[0xF] =
-        (chip8->registers[op->X] > UINT8_MAX - chip8->registers[op->Y]);
+    chip8->registers[0xF] = (chip8->registers[op->X] > UINT8_MAX - chip8->registers[op->Y]);
 
     chip8->registers[op->X] += chip8->registers[op->Y];
 }
@@ -240,7 +237,7 @@ static inline void instruction_exa1(struct state* s)
 /* Store the current value of delay timer in VX */
 static inline void instruction_fx07(struct chip8_sys* chip8, struct ops* ops)
 {
-    chip8->registers[ops->X] = SDL_AtomicGet(&chip8->delay_timer);
+    chip8->registers[ops->X] = chip8->delay_timer;
 }
 
 /* wait for a keypress, when pressed store the result in VX */
@@ -261,13 +258,13 @@ static inline void instruction_fx0a(struct state* s)
 /* set delay timer to VX */
 static inline void instruction_fx15(struct chip8_sys* chip8, struct ops* ops)
 {
-    SDL_AtomicSet(&chip8->delay_timer, chip8->registers[ops->X]);
+    chip8->delay_timer = chip8->registers[ops->X];
 }
 
 /* set sound timer to VX */
 static inline void instruction_fx18(struct chip8_sys* chip8, struct ops* ops)
 {
-    SDL_AtomicSet(&chip8->sound_timer, chip8->registers[ops->X]);
+    chip8->sound_timer = chip8->registers[ops->X];
 }
 
 /* add VX to index_register */

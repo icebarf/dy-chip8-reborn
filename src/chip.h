@@ -2,7 +2,9 @@
 #define REBORN_CHIP_H
 
 #include <SDL2/SDL.h>
-#include <stdint.h>
+
+typedef uint8_t Bool;
+#define TIMER_DEC_RATE 16666666.666667
 
 enum constants {
     FALSE = 0,
@@ -16,7 +18,10 @@ enum constants {
     REGNUM = 16,
     STACKSIZE = 48,
     DISPLAY_SIZE = DISPW * DISPH,
-    KEYS = 16
+    KEYS = 16,
+    PROGRAM_LOAD_ADDRESS = 0x200,
+    INITIAL_STACK_TOP_LOCATION = -1,
+    BAD_RETURN_VALUE = -1
 };
 
 struct chip8_sys {
@@ -27,8 +32,8 @@ struct chip8_sys {
 
     uint16_t index;
     uint16_t program_counter;
-    SDL_atomic_t delay_timer;
-    SDL_atomic_t sound_timer;
+    uint8_t delay_timer;
+    uint8_t sound_timer;
 
     uint8_t stacktop;
 };
@@ -64,18 +69,17 @@ struct sdl_objs {
     uint32_t* pixels;
 };
 
-struct atoms {
-    SDL_atomic_t* run;
-    SDL_atomic_t* timer;
-};
-
 struct state {
     struct chip8_sys* chip8;
     struct ops* ops;
     struct sdl_objs* sdl_objs;
-    SDL_atomic_t run;
+    uint8_t run;
     uint8_t keystates[KEYS];
     uint8_t DrawFL;
+    double current_time;
+    double previous_time;
+    double delta_time;
+    double delta_accumulation;
 };
 
 #endif

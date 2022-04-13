@@ -3,17 +3,23 @@
 
 #include "chip.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mutex.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_video.h>
+/**
+ * Creates a window of height*width resolution.
+ * Also returns a sdl_objs structure defined in chip.h
+ * sdl_objs structure contains the following data
+ **
+ * SDL_Window
+ * SDL_Renderer
+ * SDL_Texture
+ * A Pixels array of 2048 of type uint32_t
+ * A uint32_t value representing a RGBA Color value for each pixel
+ **/
+struct sdl_objs create_window(const unsigned int height, const unsigned int width);
 
-/* Creates a window of height*width resolution. SDL Objects struct is passed to
- * it to access various variables for video rendering
- */
-int create_window(unsigned int height, unsigned int width,
-                  struct sdl_objs* sdl_objs);
-
+/**
+ * Receives a SDL Objects structure
+ * Destroyes all 'SDL_x' objects with respective 'SDL_DestroyX' function
+ * free()s the pixels array
+ **/
 void video_cleanup(struct sdl_objs* sdl_objs);
 #endif
