@@ -1,11 +1,10 @@
 .PHONY: clean
 
-VER := 0.0.8-beta
 
 ifeq ($(OS),Windows_NT)
-    BIN := chip8-rb-$(VER).exe
+    BIN := chip8-rb.exe
 else
-    BIN := chip8-rb-$(VER)
+    BIN := chip8-rb
 endif
 
 CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
@@ -15,7 +14,7 @@ CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
 ifeq ($(DEBUG),1)
 	CFLAGS += -g3 -fsanitize=thread,undefined
 else
-	CFLAGS += -O3 -flto
+	CFLAGS += -O3 -flto -DDEBUG
 endif
 
 # Third Party Library Flags

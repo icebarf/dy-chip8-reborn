@@ -19,13 +19,12 @@ Currently the emulator is in the beta. Emulator passes all test ROMs borrowed fr
 You can obtain the games from [this link](https://johnearnest.github.io/chip8Archive/)
 
 ```sh
-$ bin/chip8-rb-0.0.7-beta path/to/romfile.ch8
+$ chip8-rb  path/to/romfile.ch8
 ```
 
 # Dependencies
 
 - [sdl2](https://libsdl.org/) - Graphics Rendering and Threading Library
-- [git](https://git-scm.com) - For termbox as a submodule
 - [make](https://www.gnu.org/software/make/) - Build system for the project
 - cc - A C Compiler usually GCC or Clang
   
@@ -41,7 +40,7 @@ $ git clone https://github.com/icebarf/dy-chip8-reborn
 
 $ cd dy-chip8-reborn
 
-$ make
+$ make -j3
 ```
 
-After following above three steps, you should have a file called `chip8-rb`.
+After following above three steps, you should have a file called `chip8-rb` in the project root.
