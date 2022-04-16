@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "keyboard.h"
 
+#include <SDL2/SDL_timer.h>
 #include <assert.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
@@ -326,14 +327,17 @@ struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
 
 void emulator(struct state* state)
 {
+    assert(state);
+
     while (state->run == TRUE) {
         /* Timing counters */
-        state->current_time = SDL_GetPerformanceCounter();
+        state->current_counter_val = SDL_GetPerformanceCounter();
 
-        state->delta_time = state->current_time - state->previous_time;
+        state->delta_time = get_delta_time(state->current_counter_val, state->previous_counter_val);
+
         state->delta_accumulation += state->delta_time;
 
-        state->previous_time = state->current_time;
+        state->previous_counter_val = state->current_counter_val;
 
         fetch(state);
         decode_execute(state);

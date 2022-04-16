@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 
 typedef uint8_t Bool;
-#define TIMER_DEC_RATE 16666666.666667
+#define TIMER_DEC_RATE (double)16666666.666667
 
 enum constants {
     FALSE = 0,
@@ -76,8 +76,8 @@ struct state {
     uint8_t run;
     uint8_t keystates[KEYS];
     uint8_t DrawFL;
-    double current_time;
-    double previous_time;
+    double current_counter_val;
+    double previous_counter_val;
     double delta_time;
     double delta_accumulation;
 };
