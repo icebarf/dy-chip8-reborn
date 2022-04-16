@@ -5,7 +5,7 @@ code base ended up being a mess with macros and what not god forbidden things li
 
 This is my attempt to completely rewrite another chip8 emulator from scratch and newer goals in mind:
 
-- Multi-threading
+- A feature-rich debugger
 - Accurate timers
 - Clean and Readable Code
 - Portable across Operating Systems
