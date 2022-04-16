@@ -24,9 +24,9 @@ $ chip8-rb  path/to/romfile.ch8
 
 # Dependencies
 
-- [sdl2](https://libsdl.org/) - Graphics Rendering and Threading Library
-- [make](https://www.gnu.org/software/make/) - Build system for the project
-- cc - A C Compiler usually GCC or Clang
+- [sdl2](https://libsdl.org/) - Graphics, Audio and Timers Library 
+- [make](https://www.gnu.org/software/make/) - Build system
+- cc   - A C Compiler
   
 # Compiling
 
