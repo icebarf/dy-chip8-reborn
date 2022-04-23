@@ -1,7 +1,6 @@
 #ifndef REBORN_CHIP_H
 #define REBORN_CHIP_H
-
-#include <SDL2/SDL.h>
+#include<stdint.h>
 
 typedef uint8_t Bool;
 #define TIMER_DEC_RATE (double)16666666.666667
@@ -14,6 +13,7 @@ enum constants {
     INST_CNT = 35,
     DISPW = 64,
     DISPH = 32,
+    DISPSCALE = 15,
     MEMSIZE = 4096,
     REGNUM = 16,
     STACKSIZE = 48,
@@ -62,9 +62,6 @@ struct ops {
 };
 
 struct sdl_objs {
-    SDL_Window* screen;
-    SDL_Renderer* renderer;
-    SDL_Texture* texture;
     uint32_t color;
     uint32_t* pixels;
 };
@@ -72,7 +69,6 @@ struct sdl_objs {
 struct state {
     struct chip8_sys* chip8;
     struct ops* ops;
-    struct sdl_objs* sdl_objs;
     uint8_t run;
     uint8_t keystates[KEYS];
     uint8_t DrawFL;

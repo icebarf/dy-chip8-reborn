@@ -1,10 +1,13 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <raylib.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include "chip.h"
 #include "chip_instructions.h"
-#include "graphics.h"
 #include "helpers.h"
 #include "keyboard.h"
-
-#include <SDL2/SDL_timer.h>
 #include <assert.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
@@ -264,7 +267,7 @@ void decode_execute(struct state* s)
         break;
 
     default:
-        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: %x", s->ops->opcode);
+        TraceLog(LOG_ERROR,"Unknown instruction %x", s->ops->inst);
     }
 }
 
@@ -272,31 +275,23 @@ void draw_to_display(struct state* s)
 {
 
     for (uint16_t i = 0; i < DISPW * DISPH; i++) {
-        if (s->chip8->display[i])
-            s->sdl_objs->pixels[i] = 0x61afefff;
-        else
-            s->sdl_objs->pixels[i] = 0x282c34ff;
+        Vector2 pos = { i % DISPW, i / DISPW };
+        if (s->chip8->display[i]){
+            //shaders would be cool but CPU rendering yay
+            DrawRectangle(pos.x,pos.y,DISPSCALE,DISPSCALE,(Color){255,255,255,255});
+        }else{
+            DrawRectangle(pos.x,pos.y,DISPSCALE,DISPSCALE,(Color){42,42,42,255});
+        }   
     }
-
-    SDL_RenderClear(s->sdl_objs->renderer);
-
-    SDL_UpdateTexture(s->sdl_objs->texture, NULL, s->sdl_objs->pixels,
-                      DISPW * sizeof(*s->sdl_objs->pixels));
-
-    SDL_RenderCopy(s->sdl_objs->renderer, s->sdl_objs->texture, NULL, NULL);
-
-    SDL_RenderPresent(s->sdl_objs->renderer);
-
     s->DrawFL = FALSE;
 }
 
 struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
-                                 struct sdl_objs* sdl_objs, struct ops* op)
-{
+                                    struct ops* op){
+
     /* verify received arguements aren't NULL pointers */
     assert(ROM);
     assert(chip8);
-    assert(sdl_objs);
     assert(op);
 
     /* Fill the state structure */
@@ -305,7 +300,6 @@ struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
     state.chip8 = chip8;
     state.ops = op;
     state.run = TRUE;
-    state.sdl_objs = sdl_objs;
     state.DrawFL = FALSE;
 
     /* chip8 structure initialisation */
@@ -315,65 +309,30 @@ struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
     if (fetchrom(chip8, ROM) == BAD_RETURN_VALUE) {
         exit(1);
     }
-
-    /* sdl objects structure initialisation */
-    *state.sdl_objs = create_window(DISPH * 15, DISPW * 15);
-
+    InitWindow(DISPW * DISPSCALE, DISPH * DISPSCALE, "Icebarf Chip8 Emulator");
+    SetTargetFPS(60);
     /* Current time seed */
     srand(time(NULL));
-
     return state;
 }
 
 void emulator(struct state* state)
 {
     assert(state);
-
-    while (state->run == TRUE) {
-        /* Timing counters */
-        state->current_counter_val = SDL_GetPerformanceCounter();
-
-        state->delta_time = get_delta_time(state->current_counter_val, state->previous_counter_val);
-
-        state->delta_accumulation += state->delta_time;
-
-        state->previous_counter_val = state->current_counter_val;
-
+    // loopity
+    while(!WindowShouldClose()){
+        if (state->run) {
+        state->delta_time = GetFrameTime(); // delta time
+        state->delta_accumulation = GetTime(); // total elapsed time
         fetch(state);
         decode_execute(state);
-
-        SDL_Event event;
-        SDL_PollEvent(&event);
-
-        switch (event.type) {
-        case SDL_QUIT:
-            state->run = FALSE;
-            break;
-
-        case SDL_KEYUP:
-            check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
-            break;
-
-        case SDL_KEYDOWN:
-            check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
-            break;
+        BeginDrawing();
+        ClearBackground((Color){42,42,42,255});
+        draw_to_display(state);
+        EndDrawing();
+        if(GetKeyPressed())
+            check_and_modify_keystate(state);
         }
-
-        if (state->DrawFL)
-            draw_to_display(state);
-
-        while (state->delta_accumulation >= TIMER_DEC_RATE) {
-            if (state->chip8->delay_timer > 0)
-                --state->chip8->delay_timer;
-
-            if (state->chip8->sound_timer > 0)
-                --state->chip8->sound_timer;
-
-            state->delta_accumulation -= TIMER_DEC_RATE;
-        }
-
-        // implement this quirk
-        SDL_Delay(01);
     }
 }
 
@@ -384,23 +343,16 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    /* initialise video*/
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        fprintf(stderr, "Could not init SDL Video: %s\n", SDL_GetError());
-        return BAD_RETURN_VALUE;
-    }
-
     /* Initilaise the structures */
     struct chip8_sys chip8 = {0};
-    struct sdl_objs sdl_objs = {0};
     struct ops op = {0};
 
-    struct state state = initialise_emulator(argv[1], &chip8, &sdl_objs, &op);
+    struct state state = initialise_emulator(argv[1], &chip8, &op);
 
     /* Run the emulator */
     emulator(&state);
 
     /* On exit */
-    video_cleanup(&sdl_objs);
+    CloseWindow();
     return 0;
 }

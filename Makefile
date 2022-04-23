@@ -23,7 +23,6 @@ LDFLAGS += `sdl2-config --libs`
 
 OBJ = \
 	src/chip.o \
-	src/graphics.o \
 	src/helpers.o \
 	src/keyboard.o
 
@@ -34,10 +33,10 @@ DEP = $(OBJ:.o=.d)
 all: $(BIN)
 
 .c.o:
-	$(CC) $(CFLAGS) $(CPPFLAGS) -MD -c $< -o $@
+	$(CC) $(CFLAGS) -MD -c $< -o $@
 
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) -lraylib
 
 clean:
 	rm -f $(BIN) $(DEP) $(OBJ)
