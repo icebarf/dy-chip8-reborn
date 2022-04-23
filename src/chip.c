@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <raylib.h>
 #include <string.h>
 #include <stdlib.h>
+#include <raylib.h>
+#define RAYLIB_H
 
 #include "chip.h"
 #include "chip_instructions.h"
@@ -322,21 +323,24 @@ void emulator(struct state* state)
     // loopity
     while(!WindowShouldClose()){
         if (state->run) {
-        state->delta_time = GetFrameTime(); // delta time
-        state->delta_accumulation = GetTime(); // total elapsed time
-        fetch(state);
-        decode_execute(state);
-        BeginDrawing();
-        ClearBackground((Color){42,42,42,255});
-        draw_to_display(state);
-        EndDrawing();
-        check_and_modify_keystate(state);
+            state->delta_time = GetFrameTime(); 
+            state->delta_accumulation = GetTime();
 
+            /** Emulate one cycle **/
+            fetch(state);
+            decode_execute(state);
+            check_and_modify_keystate(state);
+
+            /* Raylib */
+            BeginDrawing();
+            ClearBackground((Color){42,42,42,255});
+            draw_to_display(state);
+            EndDrawing();
+        }
     }
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
     if (argc < 2) {
         puts("Usage: chip8 romfile.ch8");
         return 0;
