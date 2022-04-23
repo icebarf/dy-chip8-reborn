@@ -278,9 +278,9 @@ void draw_to_display(struct state* s)
         Vector2 pos = { i % DISPW, i / DISPW };
         if (s->chip8->display[i]){
             //shaders would be cool but CPU rendering yay
-            DrawRectangle(pos.x,pos.y,DISPSCALE,DISPSCALE,(Color){255,255,255,255});
+            DrawRectangle(DISPSCALE*pos.x,DISPSCALE*pos.y,DISPSCALE,DISPSCALE,(Color){255,255,255,255});
         }else{
-            DrawRectangle(pos.x,pos.y,DISPSCALE,DISPSCALE,(Color){42,42,42,255});
+            DrawRectangle(DISPSCALE*pos.x,DISPSCALE*pos.y,DISPSCALE,DISPSCALE,(Color){42,42,42,255});
         }   
     }
     s->DrawFL = FALSE;
@@ -330,9 +330,8 @@ void emulator(struct state* state)
         ClearBackground((Color){42,42,42,255});
         draw_to_display(state);
         EndDrawing();
-        if(GetKeyPressed())
-            check_and_modify_keystate(state);
-        }
+        check_and_modify_keystate(state);
+
     }
 }
 
