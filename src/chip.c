@@ -274,15 +274,13 @@ void decode_execute(struct state* s)
 
 void draw_to_display(struct state* s)
 {
-
+    ClearBackground((Color){42,42,42,255});
     for (uint16_t i = 0; i < DISPW * DISPH; i++) {
         Vector2 pos = { i % DISPW, i / DISPW };
         if (s->chip8->display[i]){
             //shaders would be cool but CPU rendering yay
             DrawRectangle(DISPSCALE*pos.x,DISPSCALE*pos.y,DISPSCALE,DISPSCALE,(Color){255,255,255,255});
-        }else{
-            DrawRectangle(DISPSCALE*pos.x,DISPSCALE*pos.y,DISPSCALE,DISPSCALE,(Color){42,42,42,255});
-        }   
+        }
     }
     s->DrawFL = FALSE;
 }
@@ -311,6 +309,7 @@ struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
         exit(1);
     }
     InitWindow(DISPW * DISPSCALE, DISPH * DISPSCALE, "Icebarf Chip8 Emulator");
+    //implement SDL Delay in framerate
     SetTargetFPS(60);
     /* Current time seed */
     srand(time(NULL));
@@ -322,7 +321,6 @@ void emulator(struct state* state)
     assert(state);
     // loopity
     while(!WindowShouldClose()){
-        if (state->run) {
             state->delta_time = GetFrameTime(); 
             state->delta_accumulation = GetTime();
 
@@ -333,10 +331,10 @@ void emulator(struct state* state)
 
             /* Raylib */
             BeginDrawing();
-            ClearBackground((Color){42,42,42,255});
-            draw_to_display(state);
+            if(state->DrawFL){
+                draw_to_display(state);
+            }
             EndDrawing();
-        }
     }
 }
 
