@@ -24,19 +24,19 @@ $ chip8-rb  path/to/romfile.ch8
 
 # Dependencies
 
-- [sdl2](https://libsdl.org/) - Graphics, Audio and Timers Library 
+- [raylib](https://www.raylib.com) - Graphics and Audio wrapper for OpenGL 
 - [make](https://www.gnu.org/software/make/) - Build system
 - cc   - A C Compiler
   
 # Compiling
 
-Make sure that `sdl2`, `git`, `make` are installed on your machine.
+Make sure that `raylib`, `git`, `make` are installed on your machine.
 
 Install them using your distribution's package manager or compile from source from official website.
 
 1. Get a copy of the code - using `git clone` or Download Zip from GitHub.
 ```sh
-$ git clone https://github.com/icebarf/dy-chip8-reborn
+$ git clone https://github.com/itspacchu/dy-chip8-reborn
 
 $ cd dy-chip8-reborn
 
