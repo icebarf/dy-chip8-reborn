@@ -11,3 +11,4 @@ bin/*.o
 chip8-rb*
 src/*.o
 src/*.d
+*.ch8
