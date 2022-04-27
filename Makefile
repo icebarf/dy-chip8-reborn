@@ -33,7 +33,7 @@ OBJ = \
 	src/chip.o \
 	src/graphics.o \
 	src/helpers.o \
-	src/keyboard.o \
+	src/keyboard.o
 
 # Track header file dependency changes
 DEP = $(OBJ:.o=.d)
