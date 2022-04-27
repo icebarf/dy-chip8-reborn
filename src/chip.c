@@ -380,7 +380,6 @@ void emulator(struct state* state)
 int main(int argc, char** argv)
 {
     if (argc < 2) {
-        puts("Usage: chip8 romfile.ch8");
         return 0;
     }
 

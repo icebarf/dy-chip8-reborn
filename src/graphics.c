@@ -1,4 +1,6 @@
 #include "graphics.h"
+#include <SDL2/SDL_render.h>
+#include <stdint.h>
 
 struct sdl_objs create_window(const unsigned int height, const unsigned int width)
 {
@@ -17,7 +19,7 @@ struct sdl_objs create_window(const unsigned int height, const unsigned int widt
     }
 
     /* Create renderer on window */
-    sdl_objs.renderer = SDL_CreateRenderer(sdl_objs.screen, -1, SDL_RENDERER_ACCELERATED);
+    sdl_objs.renderer = SDL_CreateRenderer(sdl_objs.screen, -1, SDL_RENDERER_SOFTWARE);
 
     if (sdl_objs.renderer == NULL) {
         fprintf(stderr, "Could not create render: %s\n", SDL_GetError());
@@ -47,7 +49,7 @@ struct sdl_objs create_window(const unsigned int height, const unsigned int widt
 
     /* Set pixel color on scren, also store the pixels array in sdl_objs
      * so it can be used elsewhere */
-    uint32_t* pixels = malloc(DISPW * DISPH * sizeof(*pixels));
+    uint32_t* pixels = (uint32_t*)malloc(DISPW * DISPH * sizeof(*pixels));
 
     for (int i = 0; i < DISPH * DISPW; i++)
         pixels[i] = 0x282c34ff; // one-dark theme background

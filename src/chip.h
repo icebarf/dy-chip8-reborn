@@ -6,7 +6,7 @@
 typedef uint8_t Bool;
 #define TIMER_DEC_RATE (double)16666666.666667
 
-enum constants {
+enum CONSTANTS {
     FALSE = 0,
     TRUE = 1,
     DOWN = 0,

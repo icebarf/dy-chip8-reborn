@@ -1,5 +1,6 @@
 .PHONY: clean
 
+CC := gcc
 
 ifeq ($(OS),Windows_NT)
     BIN := chip8-rb.exe
@@ -7,25 +8,32 @@ else
     BIN := chip8-rb
 endif
 
-CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
+CFLAGS += -Wall -Wextra -Wpedantic
 
-#DEBUG:=1
+DEBUG:=1
 # Release mode and flags
 ifeq ($(DEBUG),1)
-	CFLAGS += -g3 -fsanitize=thread,undefined
+	CFLAGS += -g3 -fsanitize=address,undefined
 else
-	CFLAGS += -O3 -flto -DDEBUG
+	CFLAGS += -O3 -DDEBUG
 endif
 
 # Third Party Library Flags
-CFLAGS += `sdl2-config --cflags`
-LDFLAGS += `sdl2-config --libs`
+CFLAGS += $$(sdl2-config --cflags)
+
+# Static or dynamic linking
+STATICBIN=0
+ifeq ($(STATICBIN),1)
+	LDFLAGS += -static $$(sdl2-config --static-libs)
+else
+	LDFLAGS += $$(sdl2-config --libs)
+endif
 
 OBJ = \
 	src/chip.o \
 	src/graphics.o \
 	src/helpers.o \
-	src/keyboard.o
+	src/keyboard.o \
 
 # Track header file dependency changes
 DEP = $(OBJ:.o=.d)

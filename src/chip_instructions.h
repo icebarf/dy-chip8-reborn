@@ -122,7 +122,7 @@ static inline void instruction_8xy6(struct chip8_sys* chip8, struct ops* op)
     // remember to implement quirk - ignore VY or not
     chip8->registers[0xF] = 0;
 
-    if (chip8->registers[op->X] & 0b1)
+    if (chip8->registers[op->X] & 0x1)
         chip8->registers[0xF] = 1;
 
     chip8->registers[op->X] >>= 1;
@@ -147,7 +147,7 @@ static inline void instruction_8xye(struct chip8_sys* chip8, struct ops* op)
     chip8->registers[0xF] = 0;
 
     // remember to implement quirk here - ignore VY or not
-    if (chip8->registers[op->X] & 0b10000000)
+    if (chip8->registers[op->X] & 0x80)
         chip8->registers[0xF] = 1;
 
     chip8->registers[op->X] <<= 1;
