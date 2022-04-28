@@ -1,5 +1,5 @@
 #!/bin/sh
-git submodule update
+git submodule update --init
 cd ./include/termbox2
 make libtermbox.so
 make libtermbox.a
