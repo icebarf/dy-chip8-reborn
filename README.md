@@ -28,11 +28,11 @@ $ chip8-rb  path/to/romfile.ch8
 
 - [x] Be able to play games
 
-- [] Emulator  configurability in a UI
+- [ ] Emulator  configurability in a UI
 
-- [] Configure CPU clock
+- [ ] Configure CPU clock
 
-- [] Fully featured UI debugger
+- [ ] Fully featured UI debugger
 
 ## Dependencies
 
