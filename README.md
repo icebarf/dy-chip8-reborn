@@ -24,15 +24,15 @@ $ chip8-rb  path/to/romfile.ch8
 
 ## Goals
 
-[x] Support all chip8 instructions
+- [x] Support all chip8 instructions
 
-[x] Be able to play games
+- [x] Be able to play games
 
-[] Emulator  configurability in a UI
+- [] Emulator  configurability in a UI
 
-[] Configure CPU clock
+- [] Configure CPU clock
 
-[] Fully featured UI debugger
+- [] Fully featured UI debugger
 
 ## Dependencies
 
