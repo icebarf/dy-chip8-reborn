@@ -1,7 +1,9 @@
-build
+build/
 builddir
 .vscode
 .cache
+*.so
+*.a
 output.txt
 outfile.txt
 lib/termbox2/*

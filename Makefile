@@ -10,7 +10,7 @@ endif
 
 CFLAGS += -Wall -Wextra -Wpedantic
 
-DEBUG:=1
+DEBUG:=0
 # Release mode and flags
 ifeq ($(DEBUG),1)
 	CFLAGS += -g3 -fsanitize=address,undefined
@@ -19,14 +19,14 @@ else
 endif
 
 # Third Party Library Flags
-CFLAGS += $$(sdl2-config --cflags)
+CFLAGS += $$(sdl2-config --cflags) -Iinclude/termbox2
 
 # Static or dynamic linking
 STATICBIN=0
 ifeq ($(STATICBIN),1)
-	LDFLAGS += -static $$(sdl2-config --static-libs)
+	LDFLAGS += -static $$(sdl2-config --libs) -Linclude/termbox2 -ltermbox
 else
-	LDFLAGS += $$(sdl2-config --libs)
+	LDFLAGS += $$(sdl2-config --libs) -Linclude/termbox2 -ltermbox
 endif
 
 OBJ = \
