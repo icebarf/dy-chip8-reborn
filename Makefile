@@ -19,14 +19,14 @@ else
 endif
 
 # Third Party Library Flags
-CFLAGS += $$(sdl2-config --cflags) -Iinclude/termbox2
+CFLAGS += $$(sdl2-config --cflags)
 
 # Static or dynamic linking
 STATICBIN=0
 ifeq ($(STATICBIN),1)
-	LDFLAGS += -static $$(sdl2-config --libs) -Linclude/termbox2 -ltermbox
+	LDFLAGS += -static $$(sdl2-config --libs) -ltermbox
 else
-	LDFLAGS += $$(sdl2-config --libs) -Linclude/termbox2 -ltermbox
+	LDFLAGS += $$(sdl2-config --libs) -ltermbox
 endif
 
 OBJ = \
