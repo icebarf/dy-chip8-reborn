@@ -70,9 +70,6 @@ struct sdl_objs {
 };
 
 struct state {
-    struct chip8_sys* chip8;
-    struct ops* ops;
-    struct sdl_objs* sdl_objs;
     uint8_t run;
     uint8_t keystates[KEYS];
     uint8_t DrawFL;
@@ -80,6 +77,18 @@ struct state {
     double previous_counter_val;
     double delta_time;
     double delta_accumulation;
+    struct chip8_sys* chip8;
+    struct ops* ops;
+    struct sdl_objs* sdl_objs;
+    struct chip8_launch_data* data;
+};
+
+struct chip8_launch_data {
+    Bool quirks;
+    Bool yes_rom;
+    Bool debugger;
+    char* rom_path;
+    unsigned long frequency;
 };
 
 #endif

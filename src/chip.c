@@ -6,6 +6,7 @@
 
 #include <SDL2/SDL_timer.h>
 #include <assert.h>
+#include <stdio.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)
  */
@@ -176,7 +177,7 @@ void decode_execute(struct state* s)
             break;
 
         case 0x6:
-            instruction_8xy6(s->chip8, s->ops);
+            instruction_8xy6(s->chip8, s->ops, s->data);
             break;
 
         case 0x7:
@@ -184,7 +185,7 @@ void decode_execute(struct state* s)
             break;
 
         case 0xE:
-            instruction_8xye(s->chip8, s->ops);
+            instruction_8xye(s->chip8, s->ops, s->data);
             break;
         }
         break;
@@ -254,17 +255,18 @@ void decode_execute(struct state* s)
             break;
 
         case 0x55:
-            instruction_fx55(s->chip8, s->ops);
+            instruction_fx55(s->chip8, s->ops, s->data);
             break;
 
         case 0x65:
-            instruction_fx65(s->chip8, s->ops);
+            instruction_fx65(s->chip8, s->ops, s->data);
             break;
         }
         break;
 
     default:
-        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: %x", s->ops->opcode);
+        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: %x",
+                s->ops->opcode);
     }
 }
 
@@ -290,14 +292,15 @@ void draw_to_display(struct state* s)
     s->DrawFL = FALSE;
 }
 
-struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
-                                 struct sdl_objs* sdl_objs, struct ops* op)
+struct state initialise_emulator(struct chip8_sys* chip8,
+                                 struct sdl_objs* sdl_objs, struct ops* op,
+                                 struct chip8_launch_data* data)
 {
     /* verify received arguements aren't NULL pointers */
-    assert(ROM);
     assert(chip8);
     assert(sdl_objs);
     assert(op);
+    assert(data);
 
     /* Fill the state structure */
     struct state state = {0};
@@ -307,12 +310,13 @@ struct state initialise_emulator(const char* ROM, struct chip8_sys* chip8,
     state.run = TRUE;
     state.sdl_objs = sdl_objs;
     state.DrawFL = FALSE;
+    state.data = data;
 
     /* chip8 structure initialisation */
     load_font(state.chip8);
     state.chip8->stacktop = INITIAL_STACK_TOP_LOCATION;
     state.chip8->program_counter = PROGRAM_LOAD_ADDRESS;
-    if (fetchrom(chip8, ROM) == BAD_RETURN_VALUE) {
+    if (fetchrom(chip8, data->rom_path) == BAD_RETURN_VALUE) {
         exit(1);
     }
 
@@ -333,7 +337,8 @@ void emulator(struct state* state)
         /* Timing counters */
         state->current_counter_val = SDL_GetPerformanceCounter();
 
-        state->delta_time = get_delta_time(state->current_counter_val, state->previous_counter_val);
+        state->delta_time = get_delta_time(state->current_counter_val,
+                                           state->previous_counter_val);
 
         state->delta_accumulation += state->delta_time;
 
@@ -379,8 +384,17 @@ void emulator(struct state* state)
 
 int main(int argc, char** argv)
 {
+    struct chip8_launch_data data = {FALSE};
+
     if (argc < 2) {
+        printf("Usage: dy-chip8 [PATH TO ROM FILE] [OPTIONS]\n"
+               "do 'dy-chip8 -h' for more information\n");
         return 0;
+
+    } else {
+
+        parse_argv(argc, argv, &data);
+        assert(data.yes_rom == TRUE);
     }
 
     /* initialise video*/
@@ -394,7 +408,7 @@ int main(int argc, char** argv)
     struct sdl_objs sdl_objs = {0};
     struct ops op = {0};
 
-    struct state state = initialise_emulator(argv[1], &chip8, &sdl_objs, &op);
+    struct state state = initialise_emulator(&chip8, &sdl_objs, &op, &data);
 
     /* Run the emulator */
     emulator(&state);
