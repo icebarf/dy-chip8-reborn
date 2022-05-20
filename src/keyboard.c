@@ -1,7 +1,8 @@
 #include "keyboard.h"
 #include <assert.h>
 
-void check_and_modify_keystate(const Uint8* SDL_Keyboard_State, struct state* const emulator_state)
+void check_and_modify_keystate(const Uint8* SDL_Keyboard_State,
+                               struct state* const emulator_state)
 {
     assert(emulator_state);
     assert(SDL_Keyboard_State);

@@ -14,7 +14,8 @@
  * A Pixels array of 2048 of type uint32_t
  * A uint32_t value representing a RGBA Color value for each pixel
  **/
-struct sdl_objs create_window(const unsigned int height, const unsigned int width);
+struct sdl_objs create_window(const unsigned int height,
+                              const unsigned int width);
 
 /**
  * Receives a SDL Objects structure

@@ -9,8 +9,10 @@
  * current emulator structure in the 'state' structure
  **
  * Modifies the keystates array in emulator state
- * sets keystates in emulator structure by looking at the keyboard state received
+ * sets keystates in emulator structure by looking at the keyboard state
+ *received
  **/
-void check_and_modify_keystate(const Uint8* SDL_Keyboard_State, struct state* const emulator_state);
+void check_and_modify_keystate(const Uint8* SDL_Keyboard_State,
+                               struct state* const emulator_state);
 
 #endif
