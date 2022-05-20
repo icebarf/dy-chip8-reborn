@@ -13,3 +13,4 @@ bin/*.o
 chip8-rb*
 src/*.o
 src/*.d
+include/termbox2
