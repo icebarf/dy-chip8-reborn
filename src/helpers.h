@@ -18,9 +18,13 @@ double get_delta_time(const double current_counter_val,
 
 /* parses the options passed to the emulator and sets up the runtime structure
  */
-void parse_argv(int argc, char** argv, struct chip8_launch_data* data);
+void parse_argv(const int argc, const char** argv,
+                struct chip8_launch_data* data);
 
 /* prints out the chip8_launch_data structure to stdout */
-void print_chip8_settings(struct chip8_launch_data* data);
+void print_chip8_settings(const struct chip8_launch_data* data);
+
+/* logs to terminal when DEBUG is defined */
+void debug_log(const char* string);
 
 #endif

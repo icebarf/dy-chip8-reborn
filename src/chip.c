@@ -44,13 +44,13 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     printf("ROM - %s\n", name);
     FILE* fp = fopen(name, "rb");
     if (fp == NULL) {
-        fprintf(stderr, "Unable to find rom: %s\n", name);
+        debug_log("Failed: Unable to find rom\n");
         return BAD_RETURN_VALUE;
     }
 
     /* seek to the end of file */
     if (fseek(fp, 0L, SEEK_END) != 0) {
-        fprintf(stderr, "Unable to SEEK to end of rom file\n");
+        debug_log("Failed: Seek to end of rom file\n");
         return BAD_RETURN_VALUE;
     }
 
@@ -58,7 +58,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     /* goes back */
     if (fseek(fp, 0L, SEEK_SET) != 0) {
-        fprintf(stderr, "Unable to return to where we SEEK'd from\n");
+        debug_log("Failed: Seek back to previous position\n");
         return BAD_RETURN_VALUE;
     }
 
@@ -67,7 +67,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) !=
         (unsigned long)(file_size / inst_byte)) {
-        fprintf(stderr, "Error while reading rom to memory\n");
+        debug_log("Failed: Reading ROM to emulator memory\n");
         return BAD_RETURN_VALUE;
     }
 
@@ -266,7 +266,7 @@ void decode_execute(struct state* s)
         break;
 
     default:
-        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: %x",
+        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: 0x%x",
                 s->ops->opcode);
     }
 }

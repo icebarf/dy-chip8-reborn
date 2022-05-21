@@ -36,7 +36,8 @@ inline static void bad_arg(void)
     exit(EXIT_FAILURE);
 }
 
-void parse_argv(int argc, char** argv, struct chip8_launch_data* data)
+void parse_argv(const int argc, const char** argv,
+                struct chip8_launch_data* data)
 {
     // clang-format off
     char* options[] = {
@@ -113,9 +114,20 @@ void parse_argv(int argc, char** argv, struct chip8_launch_data* data)
     // clang-format on
 }
 
-void print_chip8_settings(struct chip8_launch_data* data)
+void print_chip8_settings(const struct chip8_launch_data* data)
 {
+    (void)data;
+#ifdef DEBUG
     printf("\tChip8 Data:\n%s - %d\n%s - %d\n%s - %d\n%s - %s\n%s - %li\n",
            "quirks", data->quirks, "ROM Present", data->yes_rom, "Debug",
            data->debugger, "ROM", data->rom_path, "Frequency", data->frequency);
+#endif
+}
+
+void debug_log(const char* string)
+{
+    (void)string;
+#ifdef DEBUG
+    fprintf(stdout, "chip8: %s", string);
+#endif
 }
