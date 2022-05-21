@@ -41,6 +41,7 @@ static void load_font(struct chip8_sys* chip8)
  */
 static int fetchrom(struct chip8_sys* chip8, const char* name)
 {
+    printf("ROM - %s\n", name);
     FILE* fp = fopen(name, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Unable to find rom: %s\n", name);
@@ -49,7 +50,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     /* seek to the end of file */
     if (fseek(fp, 0L, SEEK_END) != 0) {
-        fprintf(stderr, "Unable to SEEK to end of rom file");
+        fprintf(stderr, "Unable to SEEK to end of rom file\n");
         return BAD_RETURN_VALUE;
     }
 
@@ -57,7 +58,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     /* goes back */
     if (fseek(fp, 0L, SEEK_SET) != 0) {
-        fprintf(stderr, "Unable to return to where we SEEK'd from");
+        fprintf(stderr, "Unable to return to where we SEEK'd from\n");
         return BAD_RETURN_VALUE;
     }
 
@@ -66,7 +67,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) !=
         (unsigned long)(file_size / inst_byte)) {
-        fprintf(stderr, "Error while reading rom to memory");
+        fprintf(stderr, "Error while reading rom to memory\n");
         return BAD_RETURN_VALUE;
     }
 

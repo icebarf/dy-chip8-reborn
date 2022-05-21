@@ -75,9 +75,9 @@ void parse_argv(int argc, char** argv, struct chip8_launch_data* data)
             if(argv[index][0] == '-')
                 bad_arg();
 
-            data->rom_path = malloc(strlen(argv[index]));
+            data->rom_path = malloc(strlen(argv[index]) + 1);
             assert(data->rom_path != NULL);
-            strncpy(data->rom_path, argv[index], strnlen(argv[index], ROM_L));
+            strncpy(data->rom_path, argv[index], strlen(argv[index]) + 1);
             data->yes_rom = TRUE;
             
             index++;
