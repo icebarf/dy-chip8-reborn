@@ -394,7 +394,7 @@ int main(int argc, char** argv)
 
     } else {
 
-        parse_argv(argc, argv, &data);
+        parse_argv(argc, (const char**)argv, &data);
         assert(data.yes_rom == TRUE);
     }
 
