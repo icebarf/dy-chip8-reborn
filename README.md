@@ -19,7 +19,7 @@ Currently the emulator is in the beta. Emulator passes all test ROMs borrowed fr
 You can obtain the games from [this link](https://johnearnest.github.io/chip8Archive/)
 
 ```sh
-$ chip8-rb  path/to/romfile.ch8
+$ chip8-rb  --help
 ```
 
 ## Goals
@@ -28,16 +28,24 @@ $ chip8-rb  path/to/romfile.ch8
 
 - [x] Be able to play games
 
-- [ ] Emulator  configurability in a UI
+- [x] Emulator  configurability
 
-- [ ] Configure CPU clock
+- [ ] Fully featured UI
 
-- [ ] Fully featured UI debugger
+## Showcase
+
+- [Best Coder's Test ROM](https://cdn.discordapp.com/attachments/465586212804100106/482263586547302426/BC_test.ch8)
+![Best Coder's Rom](assets/bc_test.png)
+
+- [Corax's Test ROM](https://github.com/corax89/chip8-test-rom)
+![Corax's Test ROM](assets/corax_test.png)
+
+- Terminal Logging Output
+![Terminal Log](assets/term_log.png)
 
 ## Dependencies
 
 - [sdl2](https://libsdl.org/) - Graphics, Audio and Timers Library 
-- [termbox2](https://github.com/termbox/termbox2) - For Configuration and Debugger TUI
 - [make](https://www.gnu.org/software/make/) - Build system
 - cc   - A C Compiler
   
@@ -50,8 +58,6 @@ Otherwise compile from source or check distribution specific package if availabl
 
 Ex: Arch Linux has a package on AUR - [sdl2-static](https://aur.archlinux.org/packages/sdl2-static)
 
-[termbox2](https://github.com/termbox/termbox2) is shipped as a submodule and will be installed and compiled with the `build` script.
-
 Install them using your distribution's package manager or compile from source from official website.
 
 1. Get a copy of the code - using `git clone` or Download Zip from GitHub.
@@ -60,7 +66,7 @@ $ git clone https://github.com/icebarf/dy-chip8-reborn
 
 $ cd dy-chip8-reborn
 
-$ chmod +x build; ./build
+$ chmod +x build && ./build
 ```
 
 After following above three steps, you should have a file called `chip8-rb` in the project root.
