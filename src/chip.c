@@ -41,16 +41,15 @@ static void load_font(struct chip8_sys* chip8)
  */
 static int fetchrom(struct chip8_sys* chip8, const char* name)
 {
-    printf("ROM - %s\n", name);
     FILE* fp = fopen(name, "rb");
     if (fp == NULL) {
-        debug_log("Failed: Unable to find rom\n");
+        debug_log(RED "Failed: Unable to find rom\n" RESET);
         return BAD_RETURN_VALUE;
     }
 
     /* seek to the end of file */
     if (fseek(fp, 0L, SEEK_END) != 0) {
-        debug_log("Failed: Seek to end of rom file\n");
+        debug_log(RED "Failed: Seek to end of rom file\n" RESET);
         return BAD_RETURN_VALUE;
     }
 
@@ -58,7 +57,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     /* goes back */
     if (fseek(fp, 0L, SEEK_SET) != 0) {
-        debug_log("Failed: Seek back to previous position\n");
+        debug_log(RED "Failed: Seek back to previous position\n" RESET);
         return BAD_RETURN_VALUE;
     }
 
@@ -67,7 +66,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
 
     if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) !=
         (unsigned long)(file_size / inst_byte)) {
-        debug_log("Failed: Reading ROM to emulator memory\n");
+        debug_log(RED "Failed: Reading ROM to emulator memory\n" RESET);
         return BAD_RETURN_VALUE;
     }
 
@@ -266,7 +265,7 @@ void decode_execute(struct state* s)
         break;
 
     default:
-        SDL_Log("Chip8: Invalid Instruction detected\nOpcode: 0x%x",
+        SDL_Log(RED "Chip8: Invalid Instruction detected\nOpcode: 0x%x" RESET,
                 s->ops->opcode);
     }
 }
@@ -276,18 +275,15 @@ void draw_to_display(struct state* s)
 
     for (uint16_t i = 0; i < DISPW * DISPH; i++) {
         if (s->chip8->display[i])
-            s->sdl_objs->pixels[i] = 0x61afefff;
+            s->sdl_objs->pixels[i] = s->data->fg;
         else
-            s->sdl_objs->pixels[i] = 0x282c34ff;
+            s->sdl_objs->pixels[i] = s->data->bg;
     }
 
     SDL_RenderClear(s->sdl_objs->renderer);
-
     SDL_UpdateTexture(s->sdl_objs->texture, NULL, s->sdl_objs->pixels,
                       DISPW * sizeof(*s->sdl_objs->pixels));
-
     SDL_RenderCopy(s->sdl_objs->renderer, s->sdl_objs->texture, NULL, NULL);
-
     SDL_RenderPresent(s->sdl_objs->renderer);
 
     s->DrawFL = FALSE;
@@ -317,14 +313,20 @@ struct state initialise_emulator(struct chip8_sys* chip8,
     load_font(state.chip8);
     state.chip8->stacktop = INITIAL_STACK_TOP_LOCATION;
     state.chip8->program_counter = PROGRAM_LOAD_ADDRESS;
+
+    printf(GREEN BOLD ULINE "\n[Chip-8 Reborn]\nEmulator STATUS" RESET);
+
     if (fetchrom(chip8, data->rom_path) == BAD_RETURN_VALUE) {
         exit(1);
     }
+    fprintf(stdout, GREEN_2 "\n\nLoaded Rom - %s\n" RESET, data->rom_path);
 
     /* sdl objects structure initialisation */
-    *state.sdl_objs = create_window(DISPH * 15, DISPW * 15);
+    *state.sdl_objs = create_window(DISPH * 15, DISPW * 15, data->bg);
+    fprintf(stdout, GREEN_2 "Window creation sucessful\n" RESET);
 
-    /* Current time seed */
+    /* Current time seed for bad random
+     * I do not really care if it is truly random */
     srand(time(NULL));
 
     return state;
@@ -378,29 +380,36 @@ void emulator(struct state* state)
             state->delta_accumulation -= TIMER_DEC_RATE;
         }
 
-        // implement this quirk
+        // implement this quirk - Soon @ Sun, 22 May 2022
         SDL_Delay(01);
     }
 }
 
 int main(int argc, char** argv)
 {
-    struct chip8_launch_data data = {FALSE};
+    struct chip8_launch_data data = {.quirks = TRUE,
+                                     .yes_rom = FALSE,
+                                     .debugger = FALSE,
+                                     .rom_path = NULL,
+                                     .bg = 0x282c34ff,
+                                     .fg = 0x61afefff,
+                                     .frequency = 1000};
 
     if (argc < 2) {
-        printf("Usage: dy-chip8 [PATH TO ROM FILE] [OPTIONS]\n"
-               "do 'dy-chip8 -h' for more information\n");
+        bad_arg();
         return 0;
 
     } else {
 
         parse_argv(argc, (const char**)argv, &data);
+        print_chip8_settings(&data);
         assert(data.yes_rom == TRUE);
     }
 
     /* initialise video*/
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        fprintf(stderr, "Could not init SDL Video: %s\n", SDL_GetError());
+        fprintf(stderr, RED "Could not init SDL Video: %s\n" RESET,
+                SDL_GetError());
         return BAD_RETURN_VALUE;
     }
 
