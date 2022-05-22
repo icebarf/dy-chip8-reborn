@@ -20,13 +20,12 @@ endif
 
 # Third Party Library Flags
 CFLAGS += $$(sdl2-config --cflags)
+LDFLAGS += $$(sdl2-config --libs)
 
 # Static or dynamic linking
 STATICBIN=0
 ifeq ($(STATICBIN),1)
-	LDFLAGS += -static $$(sdl2-config --libs) -ltermbox
-else
-	LDFLAGS += $$(sdl2-config --libs) -ltermbox
+	LDFLAGS += -static $$(sdl2-config --libs)
 endif
 
 OBJ = \

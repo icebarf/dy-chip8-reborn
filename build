@@ -1,9 +1,2 @@
 #!/bin/sh
-git submodule update --init
-cd ./include/termbox2
-make libtermbox.so
-make libtermbox.a
-sudo make install
-sudo cp -u /usr/local/lib/libtermbox.so /usr/lib/
-cd ../..
 make -j4
