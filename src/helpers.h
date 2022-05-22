@@ -16,6 +16,9 @@ void push(struct chip8_sys* chip8, const uint16_t x);
 double get_delta_time(const double current_counter_val,
                       const double prev_counter_val);
 
+/* outputs bad usage error to terminal*/
+void bad_arg(void);
+
 /* parses the options passed to the emulator and sets up the runtime structure
  */
 void parse_argv(const int argc, const char** argv,

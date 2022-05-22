@@ -1,4 +1,5 @@
 #include "chip.h"
+
 #include <SDL2/SDL_timer.h>
 #include <assert.h>
 #include <stddef.h>
@@ -27,12 +28,32 @@ double get_delta_time(const double current_counter_val,
 
 void print_help(void)
 {
-    puts("HELP!!!");
+    // clang-format off
+    puts(
+        BOLD GREEN_2 "Dy-Chip8-Reborn\n"
+        "Usage: chip8-rb [OPTIONS]\n\n" RESET
+        BOLD "Options:\n" RESET
+        "  --help             Shows this help page\n"
+        "  --rom [PATH]       Specify path to chip8 ROM file\n"
+        "  --quirks           Enables specific quirks in emulator\n"
+        "  --freq             Specify the frequency at which the emulated cpu runs\n"
+        "  --debug            Enables the debugger in the emulator to debug programs\n"
+        "  --colors [BG] [FG] Specify the background and the foreground color\n"
+        BOLD RED_2 "\nAdditional Notes:\n" RESET
+        "  Quirks             There are instruction specific quirks that can be"
+        "enabled by specifying the option.\n"
+        "                     Most ROMs work well without the enable of these quirks.\n\n"
+        "  Freq               The cpu frequency specified should be in megahertz.\n"
+        "                     This option is ignored in this version of this emulator\n\n"
+        "  Colors             The foreground and background colors should both be specified\n"
+        "                     use hexadecimal base, append 'ff' at the end of your color's hex value\n");
+    // clang-format on
 }
 
-inline static void bad_arg(void)
+void bad_arg(void)
 {
-    puts("dy-chip8: invalid usage.\nType 'dy-chip8 -h' for help");
+    puts(RED_2 "dy-chip8: invalid usage.\n" RESET
+               "Type 'dy-chip8 -h' for help");
     exit(EXIT_FAILURE);
 }
 
@@ -41,11 +62,12 @@ void parse_argv(const int argc, const char** argv,
 {
     // clang-format off
     char* options[] = {
-        "-h",
+        "--help",
         "--rom",
         "--quirks",
-        "--freq",
-        "--debug"
+        "--freq", // this will stay until I figure out a proper way to do cpu frequency
+        "--debug",
+        "--colors"
     };
     
     enum OPTIONS {
@@ -54,12 +76,14 @@ void parse_argv(const int argc, const char** argv,
         QRK = 2,
         FRQ = 3,
         DBG = 4,
+        COL = 5,
 
-        HELP_L = COMP_STRLEN("-h"),
+        HELP_L = COMP_STRLEN("--help"),
         ROM_L = COMP_STRLEN("--rom"),
         QRK_L = COMP_STRLEN("--quirks"),
         FRQ_L = COMP_STRLEN("--freq"),
-        DBG_L = COMP_STRLEN("--debug")
+        DBG_L = COMP_STRLEN("--debug"),
+        COL_L = COMP_STRLEN("--colors")
     };
 
     size_t index = 1;
@@ -80,13 +104,20 @@ void parse_argv(const int argc, const char** argv,
             assert(data->rom_path != NULL);
             strncpy(data->rom_path, argv[index], strlen(argv[index]) + 1);
             data->yes_rom = TRUE;
-            
             index++;
+            
             continue;
         }
 
         if(strncmp(options[QRK], argv[index], strnlen(argv[index], QRK_L)) == 0) {
             data->quirks = TRUE;
+            index++;
+
+            continue;
+        }
+
+        if(strncmp(options[DBG], argv[index], strnlen(argv[index], DBG_L)) == 0) {
+            data->debugger = TRUE;
             index++;
 
             continue;
@@ -104,30 +135,39 @@ void parse_argv(const int argc, const char** argv,
             continue;
         }
 
-        if(strncmp(options[DBG], argv[index], strnlen(argv[index], DBG_L)) == 0) {
-            data->debugger = TRUE;
+        if(strncmp(options[COL], argv[index], strnlen(argv[index], COL_L)) == 0) {
+            index++;
+            data->bg = strtol(argv[index], NULL, 16);
+            index++;
+            data->fg = strtol(argv[index], NULL, 16);
             index++;
 
             continue;
         }
+
     }
     // clang-format on
 }
 
 void print_chip8_settings(const struct chip8_launch_data* data)
 {
-    (void)data;
-#ifdef DEBUG
-    printf("\tChip8 Data:\n%s - %d\n%s - %d\n%s - %d\n%s - %s\n%s - %li\n",
-           "quirks", data->quirks, "ROM Present", data->yes_rom, "Debug",
-           data->debugger, "ROM", data->rom_path, "Frequency", data->frequency);
-#endif
+    // clang-format off
+    printf(BOLD ULINE GREEN"\n[Chip-8 Reborn]\nEmulator Settings\n\n" RESET
+        BLUE "%16s " RESET "- %15d\n"
+        BLUE "%16s " RESET "- %s\n"
+        BLUE "%16s " RESET "- %15x\n"
+        BLUE "%16s " RESET "- %15x\n"
+        BLUE "%16s " RESET "- %15lu Mhz\n"
+        BLUE "%16s " RESET "- %15d\n"
+        BLUE "%16s " RESET "- %15d\n"
+        GREEN_2 BOLD "\nLegend - 0 for Disabled, 1 for Enabled\n" RESET,
+        "Rom Available", data->yes_rom, "Rom Path", data->rom_path, "Fg",
+           data->fg, "Bg", data->bg, "Frequency", data->frequency,
+           "Qurks Enabled", data->quirks, "Debugger Enabled", data->debugger);
+    // clang-format on
 }
 
 void debug_log(const char* string)
 {
-    (void)string;
-#ifdef DEBUG
     fprintf(stdout, "chip8: %s", string);
-#endif
 }
