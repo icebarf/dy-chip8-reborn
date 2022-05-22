@@ -387,7 +387,7 @@ void emulator(struct state* state)
 
 int main(int argc, char** argv)
 {
-    struct chip8_launch_data data = {.quirks = TRUE,
+    struct chip8_launch_data data = {.quirks = FALSE,
                                      .yes_rom = FALSE,
                                      .debugger = FALSE,
                                      .rom_path = NULL,

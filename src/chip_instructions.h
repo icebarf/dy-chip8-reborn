@@ -122,17 +122,17 @@ static inline void instruction_8xy6(struct chip8_sys* chip8, struct ops* op,
                                     struct chip8_launch_data* data)
 {
     chip8->registers[0xF] = 0;
-    uint8_t* reg = &chip8->registers[op->X];
+    uint8_t reg = chip8->registers[op->X];
 
     // implementation quirk
     if (data->quirks) {
-        reg = &chip8->registers[op->Y];
+        reg = chip8->registers[op->Y];
     }
 
-    if ((*reg) & 0x1)
+    if (reg & 0x1)
         chip8->registers[0xF] = 1;
 
-    chip8->registers[op->X] = *reg >> 1;
+    chip8->registers[op->X] = reg >> 1;
 }
 
 /* sub VX from VY and set VF if it does not borrow */
@@ -153,17 +153,17 @@ static inline void instruction_8xye(struct chip8_sys* chip8, struct ops* op,
                                     struct chip8_launch_data* data)
 {
     chip8->registers[0xF] = 0;
-    uint8_t* reg = &chip8->registers[op->X];
+    uint8_t reg = chip8->registers[op->X];
 
     // implementation quirk
     if (data->quirks) {
-        reg = &chip8->registers[op->Y];
+        reg = chip8->registers[op->Y];
     }
 
-    if ((*reg) & 0x80)
+    if (reg & 0x80)
         chip8->registers[0xF] = 1;
 
-    chip8->registers[op->X] = *reg << 1;
+    chip8->registers[op->X] = reg << 1;
 }
 
 /* skip instruction if VX != XY */
