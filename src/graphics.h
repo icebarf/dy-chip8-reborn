@@ -15,7 +15,7 @@
  * A uint32_t value representing a RGBA Color value for each pixel
  **/
 struct sdl_objs create_window(const unsigned int height,
-                              const unsigned int width);
+                              const unsigned int width, const uint32_t bg);
 
 /**
  * Receives a SDL Objects structure

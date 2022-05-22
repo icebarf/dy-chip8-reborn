@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 struct sdl_objs create_window(const unsigned int height,
-                              const unsigned int width)
+                              const unsigned int width, const uint32_t bg)
 {
     struct sdl_objs sdl_objs = {0};
 
@@ -16,7 +16,8 @@ struct sdl_objs create_window(const unsigned int height,
                          SDL_WINDOWPOS_CENTERED, width, height, 0);
 
     if (sdl_objs.screen == NULL) {
-        fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
+        fprintf(stderr, RED_2 "Could not create window: %s\n" RESET,
+                SDL_GetError());
         exit(1);
     }
 
@@ -25,17 +26,19 @@ struct sdl_objs create_window(const unsigned int height,
         SDL_CreateRenderer(sdl_objs.screen, -1, SDL_RENDERER_SOFTWARE);
 
     if (sdl_objs.renderer == NULL) {
-        fprintf(stderr, "Could not create render: %s\n", SDL_GetError());
+        fprintf(stderr, RED_2 "Could not create render: %s\n" RED_2,
+                SDL_GetError());
         exit(1);
     }
 
     if (SDL_SetRenderDrawColor(sdl_objs.renderer, 0, 0, 0, 1) < 0) {
-        fprintf(stderr, "Could not set render color: %s\n", SDL_GetError());
+        fprintf(stderr, RED_2 "Could not set render color: %s\n" RESET,
+                SDL_GetError());
         exit(1);
     }
 
     if (SDL_RenderClear(sdl_objs.renderer) < 0) {
-        fprintf(stderr, "Could not clear render on screen: %s\n",
+        fprintf(stderr, RED_2 "Could not clear render on screen: %s\n" RESET,
                 SDL_GetError());
         exit(1);
     }
@@ -48,7 +51,8 @@ struct sdl_objs create_window(const unsigned int height,
                           SDL_TEXTUREACCESS_STREAMING, DISPW, DISPH);
 
     if (sdl_objs.texture == NULL) {
-        fprintf(stderr, "Could not create texture: %s\n", SDL_GetError());
+        fprintf(stderr, RED_2 "Could not create texture: %s\n" RESET,
+                SDL_GetError());
         exit(1);
     }
 
@@ -57,7 +61,7 @@ struct sdl_objs create_window(const unsigned int height,
     uint32_t* pixels = (uint32_t*)malloc(DISPW * DISPH * sizeof(*pixels));
 
     for (int i = 0; i < DISPH * DISPW; i++)
-        pixels[i] = 0x282c34ff; // one-dark theme background
+        pixels[i] = bg;
 
     sdl_objs.pixels = pixels;
 
@@ -65,12 +69,13 @@ struct sdl_objs create_window(const unsigned int height,
      * then present it */
     if (SDL_UpdateTexture(sdl_objs.texture, NULL, pixels,
                           DISPH * sizeof(*pixels))) {
-        fprintf(stderr, "Couldn't update texture: %s\n", SDL_GetError());
+        fprintf(stderr, RED_2 "Couldn't update texture: %s\n" RESET,
+                SDL_GetError());
         exit(1);
     }
 
     if (SDL_RenderCopy(sdl_objs.renderer, sdl_objs.texture, NULL, NULL) < 0) {
-        fprintf(stderr, "Couldn't copy texture to render: %s\n",
+        fprintf(stderr, RED_2 "Couldn't copy texture to render: %s\n" RESET,
                 SDL_GetError());
         exit(1);
     }
