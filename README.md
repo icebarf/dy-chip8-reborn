@@ -70,3 +70,14 @@ $ chmod +x build && ./build
 ```
 
 After following above three steps, you should have a file called `chip8-rb` in the project root.
+
+## Special Thanks
+
+Thank you to my friends who helped my test this emulator,
+suggest implementations and ideas and contribute to the project.
+
+- [@git-bruh](https://github.com/git-bruh)
+- [@Kerdek](https://github.com/Kerdek)
+- [@its_pacchu](https://github.com/itspacchu)
+
+@icebarf
