@@ -79,5 +79,3 @@ suggest implementations and ideas and contribute to the project.
 - [@git-bruh](https://github.com/git-bruh)
 - [@Kerdek](https://github.com/Kerdek)
 - [@its_pacchu](https://github.com/itspacchu)
-
-@icebarf
