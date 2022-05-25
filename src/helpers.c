@@ -145,6 +145,8 @@ void parse_argv(const int argc, const char** argv,
             continue;
         }
 
+        /* if nothing matches then bad argument*/
+        bad_arg();
     }
     // clang-format on
 }
