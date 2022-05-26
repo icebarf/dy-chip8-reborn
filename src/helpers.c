@@ -67,7 +67,8 @@ void parse_argv(const int argc, const char** argv,
         "--quirks",
         "--freq", // this will stay until I figure out a proper way to do cpu frequency
         "--debug",
-        "--colors"
+        "--colors",
+        "-h"
     };
     
     enum OPTIONS {
@@ -77,8 +78,10 @@ void parse_argv(const int argc, const char** argv,
         FRQ = 3,
         DBG = 4,
         COL = 5,
+        HELP_2 = 6,
 
         HELP_L = COMP_STRLEN("--help"),
+        HELP_2_L = COMP_STRLEN("-h"),
         ROM_L = COMP_STRLEN("--rom"),
         QRK_L = COMP_STRLEN("--quirks"),
         FRQ_L = COMP_STRLEN("--freq"),
@@ -88,7 +91,8 @@ void parse_argv(const int argc, const char** argv,
 
     size_t index = 1;
     while (index < (size_t)argc) {
-        if (strncmp(options[HELP], argv[index], strnlen(argv[index], ROM_L)) == 0)
+        if (strncmp(options[HELP], argv[index], strnlen(argv[index], HELP_L)) == 0
+            || strncmp(options[HELP_2], argv[index], strnlen(argv[index], HELP_2_L)) == 0)
         {
             print_help();
             exit(EXIT_SUCCESS);
