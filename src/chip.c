@@ -6,6 +6,7 @@
 
 #include <SDL2/SDL_timer.h>
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 
 /* loads the font to memory at address 0x0-0x50 (0 to 80)

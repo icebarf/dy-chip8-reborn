@@ -1,7 +1,6 @@
 #ifndef REBORN_HELPERS_H
 #define REBORN_HELPERS_H
-#include <stddef.h>
-#include <stdint.h>
+#include "chip.h"
 
 /* our own implementation of strnlen()
  * returns the size of string upto maxlen, if a zero byte is encountered before
