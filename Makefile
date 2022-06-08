@@ -8,7 +8,7 @@ else
     BIN := chip8-rb
 endif
 
-CFLAGS += -Wall -Wextra -Wpedantic
+CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
 
 DEBUG:=0
 # Release mode and flags
