@@ -1,16 +1,7 @@
 #ifndef REBORN_HELPERS_H
 #define REBORN_HELPERS_H
 #include "chip.h"
-
-// clang-format off
-/* our own implementation of strnlen()
- * returns the size of string upto maxlen, if a zero byte is encountered before
- * maxlen it returns the size upto the character before the zero byte */
-[[gnu::always_inline]] static inline size_t 
-strnlen_rb(const char* str, size_t maxlen)
-{
-    return (char*)memchr(str, '\0', maxlen) - str;
-}
+#include <stddef.h>
 
 // clang-format on
 /* takes in a pointer to chip8 instance, returns the topmost value from stack,

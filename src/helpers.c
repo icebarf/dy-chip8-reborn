@@ -84,14 +84,14 @@ void parse_argv(const int argc, const char** argv,
 
     size_t index = 1;
     while (index < (size_t)argc) {
-        if (strncmp(options[HELP], argv[index], strnlen_rb(argv[index], HELP_L)) == 0
-            || strncmp(options[HELP_2], argv[index], strnlen_rb(argv[index], HELP_2_L)) == 0)
+        if (strncmp(options[HELP], argv[index], HELP_L) == 0
+            || strncmp(options[HELP_2], argv[index], HELP_2_L) == 0)
         {
             print_help();
             exit(EXIT_SUCCESS);
         }
 
-        if (strncmp(options[ROM], argv[index], strnlen_rb(argv[index], ROM_L)) == 0) {
+        if (strncmp(options[ROM], argv[index], ROM_L) == 0) {
             index++;
 
             if((index >= (size_t) argc) )
@@ -99,33 +99,28 @@ void parse_argv(const int argc, const char** argv,
             if(argv[index][0] == '-')
                 bad_arg();
 
-            data->rom_path = malloc(strlen(argv[index]) + 1);
-            if(data->rom_path == NULL){
-                fprintf(stdout, RED_2 "chip8-rb: error: OOM\n" RESET);
-                exit(1);
-            }
-            strncpy(data->rom_path, argv[index], (strlen(argv[index]) + 1));
+            data->rom_path = argv[index];
             data->yes_rom = TRUE;
             index++;
             
             continue;
         }
 
-        if(strncmp(options[QRK], argv[index], strnlen_rb(argv[index], QRK_L)) == 0) {
+        if(strncmp(options[QRK], argv[index], QRK_L) == 0) {
             data->quirks = TRUE;
             index++;
 
             continue;
         }
 
-        if(strncmp(options[DBG], argv[index], strnlen_rb(argv[index], DBG_L)) == 0) {
+        if(strncmp(options[DBG], argv[index], DBG_L) == 0) {
             data->debugger = TRUE;
             index++;
 
             continue;
         }
 
-        if(strncmp(options[FRQ], argv[index], strnlen_rb(argv[index], FRQ_L)) == 0) {
+        if(strncmp(options[FRQ], argv[index], FRQ_L) == 0) {
             index++;
 
             if(index >= (size_t) argc)
@@ -143,7 +138,7 @@ void parse_argv(const int argc, const char** argv,
             continue;
         }
 
-        if(strncmp(options[COL], argv[index], strnlen_rb(argv[index], COL_L)) == 0) {
+        if(strncmp(options[COL], argv[index], COL_L) == 0) {
             index++;
 
             if(index >= (size_t) argc)
