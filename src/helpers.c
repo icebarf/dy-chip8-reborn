@@ -1,12 +1,5 @@
 #include "helpers.h"
 
-#include <SDL2/SDL_timer.h>
-#include <assert.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #define CP_STRLEN(str) (sizeof(str) - 1)
 
 size_t strnlen_rb(const char* str, size_t maxlen)
@@ -110,12 +103,16 @@ void parse_argv(const int argc, const char** argv,
         if (strncmp(options[ROM], argv[index], strnlen_rb(argv[index], ROM_L)) == 0) {
             index++;
 
+            if((index >= (size_t) argc) )
+                bad_arg();
             if(argv[index][0] == '-')
                 bad_arg();
 
             data->rom_path = malloc(strlen(argv[index]) + 1);
-            assert(data->rom_path != NULL);
-            strncpy(data->rom_path, argv[index], strlen(argv[index]) + 1);
+            if(data->rom_path == NULL)
+                fprintf(stdout, RED_2 "chip8-rb: error: OOM\n" RESET);
+
+            strncpy(data->rom_path, argv[index], (strlen(argv[index]) + 1));
             data->yes_rom = TRUE;
             index++;
             
@@ -138,11 +135,15 @@ void parse_argv(const int argc, const char** argv,
 
         if(strncmp(options[FRQ], argv[index], strnlen_rb(argv[index], FRQ_L)) == 0) {
             index++;
+
+            if(index >= (size_t) argc)
+                bad_arg();
             if(argv[index][0] == '-')
                 bad_arg();
 
             data->frequency = strtoul(argv[index], NULL, 10);
-            assert(data->frequency != 0);
+            if(data->frequency < 1)
+                fprintf(stdout, RED_2 "chip8-rb: error: Invalid argument for frequency\n" RESET);
             index++;
 
             continue;
@@ -150,9 +151,24 @@ void parse_argv(const int argc, const char** argv,
 
         if(strncmp(options[COL], argv[index], strnlen_rb(argv[index], COL_L)) == 0) {
             index++;
+
+            if(index >= (size_t) argc)
+                bad_arg();
+            if(argv[index][0] == '-')
+                bad_arg();
+    
+
             data->bg = strtol(argv[index], NULL, 16);
+
             index++;
+
+            if(index >= (size_t) argc)
+                bad_arg();
+            if(argv[index][0] == '-')
+                bad_arg();
+
             data->fg = strtol(argv[index], NULL, 16);
+
             index++;
 
             continue;
