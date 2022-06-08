@@ -94,7 +94,7 @@ struct state {
 };
 
 struct chip8_launch_data {
-    char* rom_path;
+    const char* rom_path;
     unsigned long frequency;
     uint32_t bg;
     uint32_t fg;

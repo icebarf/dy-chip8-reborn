@@ -170,6 +170,29 @@ void emulator(struct state* state)
 {
     assert(state);
 
+    /* Somehow need to efficiently pack these together
+     * currently just yolo'ing it */
+    void* ptrs[] = {
+        [0x0] = &&nested_zero, [0x1] = &&one,   [0x2] = &&two,
+        [0x3] = &&three,       [0x4] = &&four,  [0x5] = &&five,
+        [0x6] = &&six,         [0x7] = &&seven, [0x8] = &&nested_eight,
+        [0x9] = &&nine,        [0xA] = &&A,     [0xB] = &&B,
+        [0xC] = &&C,           [0xD] = &&D,     [0xE] = &&nested_e,
+        [0xF] = &&nested_f};
+
+    void* ptrs_0[] = {[0xE0] = &&E0, [0xEE] = &&EE};
+
+    void* ptrs_8[] = {
+        [0x0] = &&eight_zero,  [0x1] = &&eight_one,   [0x2] = &&eight_two,
+        [0x3] = &&eight_three, [0x4] = &&eight_four,  [0x5] = &&eight_five,
+        [0x6] = &&eight_six,   [0x7] = &&eight_seven, [0xE] = &&eight_e};
+
+    void* ptrs_e[] = {[0x9E] = &&E_9E, [0xA1] = &&E_A1};
+
+    void* ptrs_f[] = {[0x07] = &&F_07, [0x0A] = &&F_0A, [0x15] = &&F_15,
+                      [0x18] = &&F_18, [0x1E] = &&F_1E, [0x29] = &&F_29,
+                      [0x33] = &&F_33, [0x55] = &&F_55, [0x65] = &&F_65};
+
     while (state->run == TRUE) {
         /* Timing counters */
         state->current_counter_val = SDL_GetPerformanceCounter();
@@ -179,55 +202,19 @@ void emulator(struct state* state)
         state->previous_counter_val = state->current_counter_val;
 
         fetch(state);
-
-        void* ptrs[] = {
-            [0x0] = &&nested_zero, [0x1] = &&one,   [0x2] = &&two,
-            [0x3] = &&three,       [0x4] = &&four,  [0x5] = &&five,
-            [0x6] = &&six,         [0x7] = &&seven, [0x8] = &&nested_eight,
-            [0x9] = &&nine,        [0xA] = &&A,     [0xB] = &&B,
-            [0xC] = &&C,           [0xD] = &&D,     [0xE] = &&nested_e,
-            [0xF] = &&nested_f};
-
-        assert((state->ops->inst_nib >= 0) && (state->ops->inst_nib <= 0xF));
         goto* ptrs[state->ops->inst_nib];
 
-    nested_zero : {
-        void* ptrs_0[] = {[0xE0] = &&E0, [0xEE] = &&EE};
-
-        assert((state->ops->NN == 0xE0) || (state->ops->NN == 0xEE));
+    nested_zero:
         goto* ptrs_0[state->ops->NN];
-    }
 
-    nested_eight : {
-        void* ptrs_8[] = {
-            [0x0] = &&eight_zero,  [0x1] = &&eight_one,   [0x2] = &&eight_two,
-            [0x3] = &&eight_three, [0x4] = &&eight_four,  [0x5] = &&eight_five,
-            [0x6] = &&eight_six,   [0x7] = &&eight_seven, [0xE] = &&eight_e};
-
-        assert((state->ops->N >= 0 && state->ops->N <= 0x7) ||
-               state->ops->N == 0xE);
+    nested_eight:
         goto* ptrs_8[state->ops->N];
-    }
 
-    nested_e : {
-        void* ptrs_e[] = {[0x9E] = &&E_9E, [0xA1] = &&E_A1};
-
-        assert((state->ops->NN == 0x9E) || (state->ops->NN == 0xA1));
+    nested_e:
         goto* ptrs_e[state->ops->NN];
-    }
 
-    nested_f : {
-        void* ptrs_f[] = {[0x07] = &&F_07, [0x0A] = &&F_0A, [0x15] = &&F_15,
-                          [0x18] = &&F_18, [0x1E] = &&F_1E, [0x29] = &&F_29,
-                          [0x33] = &&F_33, [0x55] = &&F_55, [0x65] = &&F_65};
-
-        assert((state->ops->NN == 0x07) || (state->ops->NN == 0x0A) ||
-               (state->ops->NN == 0x15) || (state->ops->NN == 0x18) ||
-               (state->ops->NN == 0x1E) || (state->ops->NN == 0x29) ||
-               (state->ops->NN == 0x33) || (state->ops->NN == 0x55) ||
-               (state->ops->NN == 0x65));
+    nested_f:
         goto* ptrs_f[state->ops->NN];
-    }
 
     E0:
         instruction_00e0(state);
@@ -367,6 +354,7 @@ void emulator(struct state* state)
         goto end;
 
     end : {
+    }
 
         SDL_Event event;
         SDL_PollEvent(&event);
@@ -400,7 +388,6 @@ void emulator(struct state* state)
 
         // implement this quirk - Soon @ Sun, 22 May 2022
         SDL_Delay(1);
-    }
     }
 }
 int main(int argc, char** argv)
@@ -446,7 +433,6 @@ int main(int argc, char** argv)
     emulator(&state);
 
     /* On exit */
-    free(data.rom_path);
     video_cleanup(&sdl_objs);
     return 0;
 }
