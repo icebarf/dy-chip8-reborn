@@ -8,14 +8,14 @@ else
     BIN := chip8-rb
 endif
 
-CFLAGS += -Wall -Wextra -Wpedantic -std=c2x
+CFLAGS += -Wall -Wextra -std=c2x -Wno-stringop-truncation
 
 DEBUG:=0
 # Release mode and flags
 ifeq ($(DEBUG),1)
 	CFLAGS += -g3 -fsanitize=address,undefined
 else
-	CFLAGS += -O3 -DDEBUG
+	CFLAGS += -O3
 endif
 
 # Third Party Library Flags

@@ -1,4 +1,4 @@
 -Wall
+-Wno-unused-function
 -Wextra
--Wpedantic
 -std=c2x
