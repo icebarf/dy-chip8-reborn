@@ -7,7 +7,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define COMP_STRLEN(str) (sizeof(str) - 1)
+#define CP_STRLEN(str) (sizeof(str) - 1)
+
+size_t strnlen_rb(const char* str, size_t maxlen)
+{
+    size_t counter = 0;
+    while ((counter < maxlen) && (*str != '\0')) {
+        counter++;
+        str++;
+    }
+    return counter;
+}
 
 uint16_t pop(struct chip8_sys* chip8)
 {
@@ -79,25 +89,25 @@ void parse_argv(const int argc, const char** argv,
         COL = 5,
         HELP_2 = 6,
 
-        HELP_L = COMP_STRLEN("--help"),
-        HELP_2_L = COMP_STRLEN("-h"),
-        ROM_L = COMP_STRLEN("--rom"),
-        QRK_L = COMP_STRLEN("--quirks"),
-        FRQ_L = COMP_STRLEN("--freq"),
-        DBG_L = COMP_STRLEN("--debug"),
-        COL_L = COMP_STRLEN("--colors")
+        HELP_L = CP_STRLEN("--help"),
+        HELP_2_L = CP_STRLEN("-h"),
+        ROM_L = CP_STRLEN("--rom"),
+        QRK_L = CP_STRLEN("--quirks"),
+        FRQ_L = CP_STRLEN("--freq"),
+        DBG_L = CP_STRLEN("--debug"),
+        COL_L = CP_STRLEN("--colors")
     };
 
     size_t index = 1;
     while (index < (size_t)argc) {
-        if (strncmp(options[HELP], argv[index], strnlen(argv[index], HELP_L)) == 0
-            || strncmp(options[HELP_2], argv[index], strnlen(argv[index], HELP_2_L)) == 0)
+        if (strncmp(options[HELP], argv[index], strnlen_rb(argv[index], HELP_L)) == 0
+            || strncmp(options[HELP_2], argv[index], strnlen_rb(argv[index], HELP_2_L)) == 0)
         {
             print_help();
             exit(EXIT_SUCCESS);
         }
 
-        if (strncmp(options[ROM], argv[index], strnlen(argv[index], ROM_L)) == 0) {
+        if (strncmp(options[ROM], argv[index], strnlen_rb(argv[index], ROM_L)) == 0) {
             index++;
 
             if(argv[index][0] == '-')
@@ -112,21 +122,21 @@ void parse_argv(const int argc, const char** argv,
             continue;
         }
 
-        if(strncmp(options[QRK], argv[index], strnlen(argv[index], QRK_L)) == 0) {
+        if(strncmp(options[QRK], argv[index], strnlen_rb(argv[index], QRK_L)) == 0) {
             data->quirks = TRUE;
             index++;
 
             continue;
         }
 
-        if(strncmp(options[DBG], argv[index], strnlen(argv[index], DBG_L)) == 0) {
+        if(strncmp(options[DBG], argv[index], strnlen_rb(argv[index], DBG_L)) == 0) {
             data->debugger = TRUE;
             index++;
 
             continue;
         }
 
-        if(strncmp(options[FRQ], argv[index], strnlen(argv[index], FRQ_L)) == 0) {
+        if(strncmp(options[FRQ], argv[index], strnlen_rb(argv[index], FRQ_L)) == 0) {
             index++;
             if(argv[index][0] == '-')
                 bad_arg();
@@ -138,7 +148,7 @@ void parse_argv(const int argc, const char** argv,
             continue;
         }
 
-        if(strncmp(options[COL], argv[index], strnlen(argv[index], COL_L)) == 0) {
+        if(strncmp(options[COL], argv[index], strnlen_rb(argv[index], COL_L)) == 0) {
             index++;
             data->bg = strtol(argv[index], NULL, 16);
             index++;

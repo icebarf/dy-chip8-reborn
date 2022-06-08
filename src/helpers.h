@@ -1,6 +1,12 @@
 #ifndef REBORN_HELPERS_H
 #define REBORN_HELPERS_H
+#include <stddef.h>
 #include <stdint.h>
+
+/* our own implementation of strnlen()
+ * returns the size of string upto maxlen, if a zero byte is encountered before
+ * maxlen it returns the size upto the character before the zero byte */
+size_t strnlen_rb(const char* str, size_t maxlen);
 
 /* takes in a pointer to chip8 instance, returns the topmost value from stack,
  * decrements the  stacktop */
