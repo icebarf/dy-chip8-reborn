@@ -106,171 +106,6 @@ void fetch(struct state* s)
     s->chip8->program_counter += 2;
 }
 
-void decode_execute(struct state* s)
-{
-    switch (s->ops->inst_nib) {
-    case 0x0:
-        switch (s->ops->NN) {
-
-        case 0xE0:
-            instruction_00e0(s);
-            break;
-
-        case 0xEE:
-            instruction_00ee(s->chip8);
-            break;
-        }
-        break;
-
-    case 0x1:
-        instruction_1nnn(s->chip8, s->ops);
-        break;
-
-    case 0x2:
-        instruction_2nnn(s->chip8, s->ops);
-        break;
-
-    case 0x3:
-        instruction_3xnn(s->chip8, s->ops);
-        break;
-
-    case 0x4:
-        instruction_4xnn(s->chip8, s->ops);
-        break;
-
-    case 0x5:
-        instruction_5xy0(s->chip8, s->ops);
-        break;
-
-    case 0x6:
-        instruction_6xnn(s->chip8, s->ops);
-        break;
-
-    case 0x7:
-        instruction_7xnn(s->chip8, s->ops);
-        break;
-
-    case 0x8:
-        switch (s->ops->N) {
-
-        case 0x0:
-            instruction_8xy0(s->chip8, s->ops);
-            break;
-
-        case 0x1:
-            instruction_8xy1(s->chip8, s->ops);
-            break;
-
-        case 0x2:
-            instruction_8xy2(s->chip8, s->ops);
-            break;
-
-        case 0x3:
-            instruction_8xy3(s->chip8, s->ops);
-            break;
-
-        case 0x4:
-            instruction_8xy4(s->chip8, s->ops);
-            break;
-
-        case 0x5:
-            instruction_8xy5(s->chip8, s->ops);
-            break;
-
-        case 0x6:
-            instruction_8xy6(s->chip8, s->ops, s->data);
-            break;
-
-        case 0x7:
-            instruction_8xy7(s->chip8, s->ops);
-            break;
-
-        case 0xE:
-            instruction_8xye(s->chip8, s->ops, s->data);
-            break;
-        }
-        break;
-
-    case 0x9:
-        instruction_9xy0(s->chip8, s->ops);
-        break;
-
-    case 0xA:
-        instruction_annn(s->chip8, s->ops);
-        break;
-
-    case 0xB:
-        instruction_bnnn(s->chip8, s->ops);
-        break;
-
-    case 0xC:
-        instruction_cxnn(s->chip8, s->ops);
-        break;
-
-    case 0xD:
-        instruction_dxyn(s);
-        break;
-
-    case 0xE:
-        switch (s->ops->NN) {
-
-        case 0x9E:
-            instruction_ex9e(s);
-            break;
-
-        case 0xA1:
-            instruction_exa1(s);
-            break;
-        }
-        break;
-
-    case 0xF:
-        switch (s->ops->NN) {
-
-        case 0x07:
-            instruction_fx07(s->chip8, s->ops);
-            break;
-
-        case 0x0A:
-            instruction_fx0a(s);
-            break;
-
-        case 0x15:
-            instruction_fx15(s->chip8, s->ops);
-            break;
-
-        case 0x18:
-            instruction_fx18(s->chip8, s->ops);
-            break;
-
-        case 0x1E:
-            instruction_fx1e(s->chip8, s->ops);
-            break;
-
-        case 0x29:
-            instruction_fx29(s->chip8, s->ops);
-            break;
-
-        case 0x33:
-            instruction_fx33(s->chip8, s->ops);
-            break;
-
-        case 0x55:
-            instruction_fx55(s->chip8, s->ops, s->data);
-            break;
-
-        case 0x65:
-            instruction_fx65(s->chip8, s->ops, s->data);
-            break;
-        }
-        break;
-
-    default:
-        SDL_Log(RED "Chip8: Invalid Instruction detected\nOpcode: 0x%x" RESET,
-                s->ops->opcode);
-    }
-}
-
 void draw_to_display(struct state* s)
 {
 
@@ -315,8 +150,6 @@ struct state initialise_emulator(struct chip8_sys* chip8,
     state.chip8->stacktop = INITIAL_STACK_TOP_LOCATION;
     state.chip8->program_counter = PROGRAM_LOAD_ADDRESS;
 
-    printf(GREEN BOLD ULINE "\n[Chip-8 Reborn]\nEmulator STATUS" RESET);
-
     if (fetchrom(chip8, data->rom_path) == BAD_RETURN_VALUE) {
         exit(1);
     }
@@ -324,7 +157,7 @@ struct state initialise_emulator(struct chip8_sys* chip8,
 
     /* sdl objects structure initialisation */
     *state.sdl_objs = create_window(DISPH * 15, DISPW * 15, data->bg);
-    fprintf(stdout, GREEN_2 "Window creation sucessful\n" RESET);
+    fprintf(stdout, GREEN_2 "Created window...\n" RESET);
 
     /* Current time seed for bad random
      * I do not really care if it is truly random */
@@ -340,16 +173,200 @@ void emulator(struct state* state)
     while (state->run == TRUE) {
         /* Timing counters */
         state->current_counter_val = SDL_GetPerformanceCounter();
-
         state->delta_time = get_delta_time(state->current_counter_val,
                                            state->previous_counter_val);
-
         state->delta_accumulation += state->delta_time;
-
         state->previous_counter_val = state->current_counter_val;
 
         fetch(state);
-        decode_execute(state);
+
+        void* ptrs[] = {
+            [0x0] = &&nested_zero, [0x1] = &&one,   [0x2] = &&two,
+            [0x3] = &&three,       [0x4] = &&four,  [0x5] = &&five,
+            [0x6] = &&six,         [0x7] = &&seven, [0x8] = &&nested_eight,
+            [0x9] = &&nine,        [0xA] = &&A,     [0xB] = &&B,
+            [0xC] = &&C,           [0xD] = &&D,     [0xE] = &&nested_e,
+            [0xF] = &&nested_f};
+
+        assert((state->ops->inst_nib >= 0) && (state->ops->inst_nib <= 0xF));
+        goto* ptrs[state->ops->inst_nib];
+
+    nested_zero : {
+        void* ptrs_0[] = {[0xE0] = &&E0, [0xEE] = &&EE};
+
+        assert((state->ops->NN == 0xE0) || (state->ops->NN == 0xEE));
+        goto* ptrs_0[state->ops->NN];
+    }
+
+    nested_eight : {
+        void* ptrs_8[] = {
+            [0x0] = &&eight_zero,  [0x1] = &&eight_one,   [0x2] = &&eight_two,
+            [0x3] = &&eight_three, [0x4] = &&eight_four,  [0x5] = &&eight_five,
+            [0x6] = &&eight_six,   [0x7] = &&eight_seven, [0xE] = &&eight_e};
+
+        assert((state->ops->N >= 0 && state->ops->N <= 0x7) ||
+               state->ops->N == 0xE);
+        goto* ptrs_8[state->ops->N];
+    }
+
+    nested_e : {
+        void* ptrs_e[] = {[0x9E] = &&E_9E, [0xA1] = &&E_A1};
+
+        assert((state->ops->NN == 0x9E) || (state->ops->NN == 0xA1));
+        goto* ptrs_e[state->ops->NN];
+    }
+
+    nested_f : {
+        void* ptrs_f[] = {[0x07] = &&F_07, [0x0A] = &&F_0A, [0x15] = &&F_15,
+                          [0x18] = &&F_18, [0x1E] = &&F_1E, [0x29] = &&F_29,
+                          [0x33] = &&F_33, [0x55] = &&F_55, [0x65] = &&F_65};
+
+        assert((state->ops->NN == 0x07) || (state->ops->NN == 0x0A) ||
+               (state->ops->NN == 0x15) || (state->ops->NN == 0x18) ||
+               (state->ops->NN == 0x1E) || (state->ops->NN == 0x29) ||
+               (state->ops->NN == 0x33) || (state->ops->NN == 0x55) ||
+               (state->ops->NN == 0x65));
+        goto* ptrs_f[state->ops->NN];
+    }
+
+    E0:
+        instruction_00e0(state);
+        goto end;
+
+    EE:
+        instruction_00ee(state->chip8);
+        goto end;
+
+    one:
+        instruction_1nnn(state->chip8, state->ops);
+        goto end;
+
+    two:
+        instruction_2nnn(state->chip8, state->ops);
+        goto end;
+
+    three:
+        instruction_3xnn(state->chip8, state->ops);
+        goto end;
+
+    four:
+
+        instruction_4xnn(state->chip8, state->ops);
+        goto end;
+
+    five:
+        instruction_5xy0(state->chip8, state->ops);
+        goto end;
+
+    six:
+        instruction_6xnn(state->chip8, state->ops);
+        goto end;
+
+    seven:
+        instruction_7xnn(state->chip8, state->ops);
+        goto end;
+
+    eight_zero:
+        instruction_8xy0(state->chip8, state->ops);
+        goto end;
+
+    eight_one:
+        instruction_8xy1(state->chip8, state->ops);
+        goto end;
+
+    eight_two:
+        instruction_8xy2(state->chip8, state->ops);
+        goto end;
+
+    eight_three:
+        instruction_8xy3(state->chip8, state->ops);
+        goto end;
+
+    eight_four:
+        instruction_8xy4(state->chip8, state->ops);
+        goto end;
+
+    eight_five:
+        instruction_8xy5(state->chip8, state->ops);
+        goto end;
+
+    eight_six:
+        instruction_8xy6(state->chip8, state->ops, state->data);
+        goto end;
+
+    eight_seven:
+        instruction_8xy7(state->chip8, state->ops);
+        goto end;
+
+    eight_e:
+        instruction_8xye(state->chip8, state->ops, state->data);
+        goto end;
+
+    nine:
+        instruction_9xy0(state->chip8, state->ops);
+        goto end;
+
+    A:
+        instruction_annn(state->chip8, state->ops);
+        goto end;
+
+    B:
+        instruction_bnnn(state->chip8, state->ops);
+        goto end;
+
+    C:
+        instruction_cxnn(state->chip8, state->ops);
+        goto end;
+
+    D:
+        instruction_dxyn(state);
+        goto end;
+
+    E_9E:
+        instruction_ex9e(state);
+        goto end;
+
+    E_A1:
+        instruction_exa1(state);
+        goto end;
+
+    F_07:
+        instruction_fx07(state->chip8, state->ops);
+        goto end;
+
+    F_0A:
+        instruction_fx0a(state);
+        goto end;
+
+    F_15:
+        instruction_fx15(state->chip8, state->ops);
+        goto end;
+
+    F_18:
+        instruction_fx18(state->chip8, state->ops);
+        goto end;
+
+    F_1E:
+        instruction_fx1e(state->chip8, state->ops);
+        goto end;
+
+    F_29:
+        instruction_fx29(state->chip8, state->ops);
+        goto end;
+
+    F_33:
+        instruction_fx33(state->chip8, state->ops);
+        goto end;
+
+    F_55:
+        instruction_fx55(state->chip8, state->ops, state->data);
+        goto end;
+
+    F_65:
+        instruction_fx65(state->chip8, state->ops, state->data);
+        goto end;
+
+    end : {
 
         SDL_Event event;
         SDL_PollEvent(&event);
@@ -382,10 +399,10 @@ void emulator(struct state* state)
         }
 
         // implement this quirk - Soon @ Sun, 22 May 2022
-        SDL_Delay(01);
+        SDL_Delay(1);
+    }
     }
 }
-
 int main(int argc, char** argv)
 {
     struct chip8_launch_data data = {.quirks = FALSE,
@@ -404,7 +421,10 @@ int main(int argc, char** argv)
 
         parse_argv(argc, (const char**)argv, &data);
         print_chip8_settings(&data);
-        assert(data.yes_rom == TRUE);
+        if (!data.yes_rom) {
+            fprintf(stdout, RED_2 "chip8-rb: error: must specify rom\n" RESET);
+            return 0;
+        }
     }
 
     /* initialise video*/
@@ -419,12 +439,14 @@ int main(int argc, char** argv)
     struct sdl_objs sdl_objs = {0};
     struct ops op = {0};
 
+    printf(GREEN BOLD ULINE "\n[Chip-8 Reborn]\nEmulator STATUS\n" RESET);
     struct state state = initialise_emulator(&chip8, &sdl_objs, &op, &data);
 
     /* Run the emulator */
     emulator(&state);
 
     /* On exit */
+    free(data.rom_path);
     video_cleanup(&sdl_objs);
     return 0;
 }
