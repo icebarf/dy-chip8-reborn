@@ -1,16 +1,7 @@
 #include "helpers.h"
+#include <stdlib.h>
 
 #define CP_STRLEN(str) (sizeof(str) - 1)
-
-size_t strnlen_rb(const char* str, size_t maxlen)
-{
-    size_t counter = 0;
-    while ((counter < maxlen) && (*str != '\0')) {
-        counter++;
-        str++;
-    }
-    return counter;
-}
 
 uint16_t pop(struct chip8_sys* chip8)
 {
@@ -109,9 +100,10 @@ void parse_argv(const int argc, const char** argv,
                 bad_arg();
 
             data->rom_path = malloc(strlen(argv[index]) + 1);
-            if(data->rom_path == NULL)
+            if(data->rom_path == NULL){
                 fprintf(stdout, RED_2 "chip8-rb: error: OOM\n" RESET);
-
+                exit(1);
+            }
             strncpy(data->rom_path, argv[index], (strlen(argv[index]) + 1));
             data->yes_rom = TRUE;
             index++;
@@ -142,8 +134,10 @@ void parse_argv(const int argc, const char** argv,
                 bad_arg();
 
             data->frequency = strtoul(argv[index], NULL, 10);
-            if(data->frequency < 1)
+            if(data->frequency < 1) {
                 fprintf(stdout, RED_2 "chip8-rb: error: Invalid argument for frequency\n" RESET);
+                bad_arg();
+            }
             index++;
 
             continue;
