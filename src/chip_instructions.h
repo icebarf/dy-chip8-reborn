@@ -15,90 +15,103 @@
 #include <time.h>
 
 /* clear screen */
-static inline void instruction_00e0(struct state* s)
+[[gnu::always_inline]] static inline void instruction_00e0(struct state* s)
 {
     memset(s->chip8->display, 0, DISPLAY_SIZE);
     s->DrawFL = TRUE;
 }
 
 /* return from subroutine */
-static inline void instruction_00ee(struct chip8_sys* chip8)
+[[gnu::always_inline]] static inline void
+instruction_00ee(struct chip8_sys* chip8)
 {
     chip8->program_counter = pop(chip8);
 }
 
 /* jump to address */
-static inline void instruction_1nnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_1nnn(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->program_counter = op->NNN;
 }
 
 /* call function at address */
-static inline void instruction_2nnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_2nnn(struct chip8_sys* chip8, struct ops* op)
 {
     push(chip8, chip8->program_counter);
     instruction_1nnn(chip8, op);
 }
 
 /* skip instruction if VX == NN */
-static inline void instruction_3xnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_3xnn(struct chip8_sys* chip8, struct ops* op)
 {
     if (chip8->registers[op->X] == op->NN)
         chip8->program_counter += 2;
 }
 
 /* skip instruction if VX != NN */
-static inline void instruction_4xnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_4xnn(struct chip8_sys* chip8, struct ops* op)
 {
     if (chip8->registers[op->X] != op->NN)
         chip8->program_counter += 2;
 }
 
 /* skip instruction if VX == XY */
-static inline void instruction_5xy0(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_5xy0(struct chip8_sys* chip8, struct ops* op)
 {
     if (chip8->registers[op->X] == chip8->registers[op->Y])
         chip8->program_counter += 2;
 }
 
 /* store NN in VX*/
-static inline void instruction_6xnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_6xnn(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] = op->NN;
 }
 
 /* add NN to VX*/
-static inline void instruction_7xnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_7xnn(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] += op->NN;
 }
 
 /* store VY in VX */
-static inline void instruction_8xy0(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy0(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] = chip8->registers[op->Y];
 }
 
 /* set VX = VX OR VY */
-static inline void instruction_8xy1(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy1(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] |= chip8->registers[op->Y];
 }
 
 /* set VX = VX AND VY */
-static inline void instruction_8xy2(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy2(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] &= chip8->registers[op->Y];
 }
 
 /* set VX = VX XOR VY */
-static inline void instruction_8xy3(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy3(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[op->X] ^= chip8->registers[op->Y];
 }
 
 /* add VY to VX and set carry flag (VF) */
-static inline void instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[0xF] =
         (chip8->registers[op->X] > UINT8_MAX - chip8->registers[op->Y]);
@@ -107,7 +120,8 @@ static inline void instruction_8xy4(struct chip8_sys* chip8, struct ops* op)
 }
 
 /* sub VY from VX and set VF if it does not borrow */
-static inline void instruction_8xy5(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy5(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->registers[0xF] = 1;
 
@@ -118,8 +132,9 @@ static inline void instruction_8xy5(struct chip8_sys* chip8, struct ops* op)
 }
 
 /* Set Vx = Vx SHR 1. Set VF to LSB*/
-static inline void instruction_8xy6(struct chip8_sys* chip8, struct ops* op,
-                                    struct chip8_launch_data* data)
+[[gnu::always_inline]] static inline void
+instruction_8xy6(struct chip8_sys* chip8, struct ops* op,
+                 struct chip8_launch_data* data)
 {
     chip8->registers[0xF] = 0;
     uint8_t reg = chip8->registers[op->X];
@@ -136,7 +151,8 @@ static inline void instruction_8xy6(struct chip8_sys* chip8, struct ops* op,
 }
 
 /* sub VX from VY and set VF if it does not borrow */
-static inline void instruction_8xy7(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_8xy7(struct chip8_sys* chip8, struct ops* op)
 {
     /* Assume it does not borrow*/
     chip8->registers[0xF] = 1;
@@ -149,8 +165,9 @@ static inline void instruction_8xy7(struct chip8_sys* chip8, struct ops* op)
 }
 
 /* Set Vx = Vx SHL 1. Set VF to MSB*/
-static inline void instruction_8xye(struct chip8_sys* chip8, struct ops* op,
-                                    struct chip8_launch_data* data)
+[[gnu::always_inline]] static inline void
+instruction_8xye(struct chip8_sys* chip8, struct ops* op,
+                 struct chip8_launch_data* data)
 {
     chip8->registers[0xF] = 0;
     uint8_t reg = chip8->registers[op->X];
@@ -167,26 +184,30 @@ static inline void instruction_8xye(struct chip8_sys* chip8, struct ops* op,
 }
 
 /* skip instruction if VX != XY */
-static inline void instruction_9xy0(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_9xy0(struct chip8_sys* chip8, struct ops* op)
 {
     if (chip8->registers[op->X] != chip8->registers[op->Y])
         chip8->program_counter += 2;
 }
 
 /* Store address in Register I */
-static inline void instruction_annn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_annn(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->index = op->NNN;
 }
 
 /* Jump to address NNN + V0 */
-static inline void instruction_bnnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_bnnn(struct chip8_sys* chip8, struct ops* op)
 {
     chip8->program_counter = op->NNN + chip8->registers[0];
 }
 
 /* Set VX to random number masked with NN */
-static inline void instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
+[[gnu::always_inline]] static inline void
+instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
 {
     // debug
     uint8_t rnd = rand() % UINT8_MAX;
@@ -194,7 +215,7 @@ static inline void instruction_cxnn(struct chip8_sys* chip8, struct ops* op)
 }
 
 /* draw sprite at (VX,VY) with sprite data from address stored at VI*/
-static inline void instruction_dxyn(struct state* s)
+[[gnu::always_inline]] static inline void instruction_dxyn(struct state* s)
 {
     uint8_t x = s->chip8->registers[s->ops->X] & (DISPW - 1);
     uint8_t y = s->chip8->registers[s->ops->Y] & (DISPH - 1);
@@ -234,27 +255,28 @@ static inline void instruction_dxyn(struct state* s)
 }
 
 /* skip next instruction if key in VX is UP*/
-static inline void instruction_ex9e(struct state* s)
+[[gnu::always_inline]] static inline void instruction_ex9e(struct state* s)
 {
     if (s->keystates[s->chip8->registers[s->ops->X]] == UP)
         s->chip8->program_counter += 2;
 }
 
 /* skip next instruction if key in VX is DOWN*/
-static inline void instruction_exa1(struct state* s)
+[[gnu::always_inline]] static inline void instruction_exa1(struct state* s)
 {
     if (s->keystates[s->chip8->registers[s->ops->X]] == DOWN)
         s->chip8->program_counter += 2;
 }
 
 /* Store the current value of delay timer in VX */
-static inline void instruction_fx07(struct chip8_sys* chip8, struct ops* ops)
+[[gnu::always_inline]] static inline void
+instruction_fx07(struct chip8_sys* chip8, struct ops* ops)
 {
     chip8->registers[ops->X] = chip8->delay_timer;
 }
 
 /* wait for a keypress, when pressed store the result in VX */
-static inline void instruction_fx0a(struct state* s)
+[[gnu::always_inline]] static inline void instruction_fx0a(struct state* s)
 {
     s->chip8->program_counter -= 2;
 
@@ -269,26 +291,30 @@ static inline void instruction_fx0a(struct state* s)
 }
 
 /* set delay timer to VX */
-static inline void instruction_fx15(struct chip8_sys* chip8, struct ops* ops)
+[[gnu::always_inline]] static inline void
+instruction_fx15(struct chip8_sys* chip8, struct ops* ops)
 {
     chip8->delay_timer = chip8->registers[ops->X];
 }
 
 /* set sound timer to VX */
-static inline void instruction_fx18(struct chip8_sys* chip8, struct ops* ops)
+[[gnu::always_inline]] static inline void
+instruction_fx18(struct chip8_sys* chip8, struct ops* ops)
 {
     chip8->sound_timer = chip8->registers[ops->X];
 }
 
 /* add VX to index_register */
-static inline void instruction_fx1e(struct chip8_sys* chip8, struct ops* ops)
+[[gnu::always_inline]] static inline void
+instruction_fx1e(struct chip8_sys* chip8, struct ops* ops)
 {
     chip8->index += chip8->registers[ops->X];
 }
 
 /* set index to the memory location of the sprite, which is a hex digit stored
  * in VX */
-static inline void instruction_fx29(struct chip8_sys* chip8, struct ops* ops)
+[[gnu::always_inline]] static inline void
+instruction_fx29(struct chip8_sys* chip8, struct ops* ops)
 {
     chip8->index = 5 * (chip8->registers[ops->X] & 15);
 }
@@ -296,7 +322,8 @@ static inline void instruction_fx29(struct chip8_sys* chip8, struct ops* ops)
 /* store VX in BCD format at memory i, i+1, i+2 respectively for H,T,O
  * BCD - Binary Coded Decimal
  * HTO - Hundreds Tens Ones */
-static inline void instruction_fx33(struct chip8_sys* chip8, struct ops* ops)
+[[gnu::always_inline]] static inline void
+instruction_fx33(struct chip8_sys* chip8, struct ops* ops)
 {
     uint8_t number = chip8->registers[ops->X];
 
@@ -313,8 +340,9 @@ static inline void instruction_fx33(struct chip8_sys* chip8, struct ops* ops)
 
 /* store the value from range V0 - VX inclusive to address stored in index reg
  */
-static inline void instruction_fx55(struct chip8_sys* chip8, struct ops* ops,
-                                    struct chip8_launch_data* data)
+[[gnu::always_inline]] static inline void
+instruction_fx55(struct chip8_sys* chip8, struct ops* ops,
+                 struct chip8_launch_data* data)
 {
     memcpy(&chip8->memory[chip8->index], chip8->registers, ops->X + 1);
 
@@ -324,8 +352,9 @@ static inline void instruction_fx55(struct chip8_sys* chip8, struct ops* ops,
 }
 
 /* store values from memory address in index reg to range V0 - VX */
-static inline void instruction_fx65(struct chip8_sys* chip8, struct ops* ops,
-                                    struct chip8_launch_data* data)
+[[gnu::always_inline]] static inline void
+instruction_fx65(struct chip8_sys* chip8, struct ops* ops,
+                 struct chip8_launch_data* data)
 {
     memcpy(&chip8->registers[0], &chip8->memory[chip8->index], ops->X + 1);
 
