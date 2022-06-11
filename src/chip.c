@@ -363,7 +363,7 @@ void emulator(struct state* state)
 }
 int main(int argc, char** argv)
 {
-    struct chip8_launch_data data = {.quirks = FALSE,
+    static struct chip8_launch_data data = {.quirks = FALSE,
                                      .yes_rom = FALSE,
                                      .debugger = FALSE,
                                      .rom_path = NULL,
@@ -394,7 +394,7 @@ int main(int argc, char** argv)
     }
 
     /* Initilaise the structures */
-    struct chip8_sys chip8 = {.memory = {
+    static struct chip8_sys chip8 = {.memory = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -412,8 +412,8 @@ int main(int argc, char** argv)
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     }};
-    struct sdl_objs sdl_objs = {0};
-    struct ops op = {0};
+    static struct sdl_objs sdl_objs = {0};
+    static struct ops op = {0};
 
     printf(GREEN BOLD ULINE "\n[Chip-8 Reborn]\nEmulator STATUS\n" RESET);
 
