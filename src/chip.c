@@ -37,8 +37,7 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
     /* each chip8 instruction is two bytes long */
     enum fread_param { inst_byte = 1 };
 
-    if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) !=
-        (unsigned long)(file_size / inst_byte)) {
+    if (fread(&chip8->memory[0x200], inst_byte, file_size, fp) != (unsigned long)(file_size / inst_byte)) {
         debug_log(RED "Failed: Reading ROM to emulator memory\n" RESET);
         return BAD_RETURN_VALUE;
     }
@@ -55,8 +54,8 @@ static int fetchrom(struct chip8_sys* chip8, const char* name)
  **/
 void fetch(struct state* s)
 {
-    s->ops->opcode = (s->chip8->memory[s->chip8->program_counter] << 8) |
-                     s->chip8->memory[s->chip8->program_counter + 1];
+    s->ops->opcode =
+        (s->chip8->memory[s->chip8->program_counter] << 8) | s->chip8->memory[s->chip8->program_counter + 1];
 
     uint16_t tmp = (s->ops->opcode << 4) & 0xffff;
     s->ops->NNN = (tmp >> 4) & 0xffff;
@@ -81,170 +80,165 @@ void fetch(struct state* s)
 void decode_execute(struct state* s)
 {
     switch (s->ops->inst_nib) {
-    case 0x0:
-        switch (s->ops->NN) {
-
-        case 0xE0:
-            instruction_00e0(s);
-            break;
-
-        case 0xEE:
-            instruction_00ee(s->chip8);
-            break;
-        }
-        break;
-
-    case 0x1:
-        instruction_1nnn(s->chip8, s->ops);
-        break;
-
-    case 0x2:
-        instruction_2nnn(s->chip8, s->ops);
-        break;
-
-    case 0x3:
-        instruction_3xnn(s->chip8, s->ops);
-        break;
-
-    case 0x4:
-        instruction_4xnn(s->chip8, s->ops);
-        break;
-
-    case 0x5:
-        instruction_5xy0(s->chip8, s->ops);
-        break;
-
-    case 0x6:
-        instruction_6xnn(s->chip8, s->ops);
-        break;
-
-    case 0x7:
-        instruction_7xnn(s->chip8, s->ops);
-        break;
-
-    case 0x8:
-        switch (s->ops->N) {
-
         case 0x0:
-            instruction_8xy0(s->chip8, s->ops);
+            switch (s->ops->NN) {
+                case 0xE0:
+                    instruction_00e0(s);
+                    break;
+
+                case 0xEE:
+                    instruction_00ee(s->chip8);
+                    break;
+            }
             break;
 
         case 0x1:
-            instruction_8xy1(s->chip8, s->ops);
+            instruction_1nnn(s->chip8, s->ops);
             break;
 
         case 0x2:
-            instruction_8xy2(s->chip8, s->ops);
+            instruction_2nnn(s->chip8, s->ops);
             break;
 
         case 0x3:
-            instruction_8xy3(s->chip8, s->ops);
+            instruction_3xnn(s->chip8, s->ops);
             break;
 
         case 0x4:
-            instruction_8xy4(s->chip8, s->ops);
+            instruction_4xnn(s->chip8, s->ops);
             break;
 
         case 0x5:
-            instruction_8xy5(s->chip8, s->ops);
+            instruction_5xy0(s->chip8, s->ops);
             break;
 
         case 0x6:
-            instruction_8xy6(s->chip8, s->ops, s->data);
+            instruction_6xnn(s->chip8, s->ops);
             break;
 
         case 0x7:
-            instruction_8xy7(s->chip8, s->ops);
+            instruction_7xnn(s->chip8, s->ops);
+            break;
+
+        case 0x8:
+            switch (s->ops->N) {
+                case 0x0:
+                    instruction_8xy0(s->chip8, s->ops);
+                    break;
+
+                case 0x1:
+                    instruction_8xy1(s->chip8, s->ops);
+                    break;
+
+                case 0x2:
+                    instruction_8xy2(s->chip8, s->ops);
+                    break;
+
+                case 0x3:
+                    instruction_8xy3(s->chip8, s->ops);
+                    break;
+
+                case 0x4:
+                    instruction_8xy4(s->chip8, s->ops);
+                    break;
+
+                case 0x5:
+                    instruction_8xy5(s->chip8, s->ops);
+                    break;
+
+                case 0x6:
+                    instruction_8xy6(s->chip8, s->ops, s->data);
+                    break;
+
+                case 0x7:
+                    instruction_8xy7(s->chip8, s->ops);
+                    break;
+
+                case 0xE:
+                    instruction_8xye(s->chip8, s->ops, s->data);
+                    break;
+            }
+            break;
+
+        case 0x9:
+            instruction_9xy0(s->chip8, s->ops);
+            break;
+
+        case 0xA:
+            instruction_annn(s->chip8, s->ops);
+            break;
+
+        case 0xB:
+            instruction_bnnn(s->chip8, s->ops);
+            break;
+
+        case 0xC:
+            instruction_cxnn(s->chip8, s->ops);
+            break;
+
+        case 0xD:
+            instruction_dxyn(s);
             break;
 
         case 0xE:
-            instruction_8xye(s->chip8, s->ops, s->data);
-            break;
-        }
-        break;
+            switch (s->ops->NN) {
+                case 0x9E:
+                    instruction_ex9e(s);
+                    break;
 
-    case 0x9:
-        instruction_9xy0(s->chip8, s->ops);
-        break;
-
-    case 0xA:
-        instruction_annn(s->chip8, s->ops);
-        break;
-
-    case 0xB:
-        instruction_bnnn(s->chip8, s->ops);
-        break;
-
-    case 0xC:
-        instruction_cxnn(s->chip8, s->ops);
-        break;
-
-    case 0xD:
-        instruction_dxyn(s);
-        break;
-
-    case 0xE:
-        switch (s->ops->NN) {
-
-        case 0x9E:
-            instruction_ex9e(s);
+                case 0xA1:
+                    instruction_exa1(s);
+                    break;
+            }
             break;
 
-        case 0xA1:
-            instruction_exa1(s);
+        case 0xF:
+            switch (s->ops->NN) {
+                case 0x07:
+                    instruction_fx07(s->chip8, s->ops);
+                    break;
+
+                case 0x0A:
+                    instruction_fx0a(s);
+                    break;
+
+                case 0x15:
+                    instruction_fx15(s->chip8, s->ops);
+                    break;
+
+                case 0x18:
+                    instruction_fx18(s->chip8, s->ops);
+                    break;
+
+                case 0x1E:
+                    instruction_fx1e(s->chip8, s->ops);
+                    break;
+
+                case 0x29:
+                    instruction_fx29(s->chip8, s->ops);
+                    break;
+
+                case 0x33:
+                    instruction_fx33(s->chip8, s->ops);
+                    break;
+
+                case 0x55:
+                    instruction_fx55(s->chip8, s->ops, s->data);
+                    break;
+
+                case 0x65:
+                    instruction_fx65(s->chip8, s->ops, s->data);
+                    break;
+            }
             break;
-        }
-        break;
 
-    case 0xF:
-        switch (s->ops->NN) {
-
-        case 0x07:
-            instruction_fx07(s->chip8, s->ops);
-            break;
-
-        case 0x0A:
-            instruction_fx0a(s);
-            break;
-
-        case 0x15:
-            instruction_fx15(s->chip8, s->ops);
-            break;
-
-        case 0x18:
-            instruction_fx18(s->chip8, s->ops);
-            break;
-
-        case 0x1E:
-            instruction_fx1e(s->chip8, s->ops);
-            break;
-
-        case 0x29:
-            instruction_fx29(s->chip8, s->ops);
-            break;
-
-        case 0x33:
-            instruction_fx33(s->chip8, s->ops);
-            break;
-
-        case 0x55:
-            instruction_fx55(s->chip8, s->ops, s->data);
-            break;
-
-        case 0x65:
-            instruction_fx65(s->chip8, s->ops, s->data);
-            break;
-        }
-        break;
-
-    default:
-        __builtin_unreachable();
+        default:
+            __builtin_unreachable();
     }
 }
 
 void draw_to_display(struct state* s)
 {
-
     for (uint16_t i = 0; i < DISPW * DISPH; i++) {
         if (s->chip8->display[i])
             s->sdl_objs->pixels[i] = s->data->fg;
@@ -253,8 +247,7 @@ void draw_to_display(struct state* s)
     }
 
     SDL_RenderClear(s->sdl_objs->renderer);
-    SDL_UpdateTexture(s->sdl_objs->texture, NULL, s->sdl_objs->pixels,
-                      DISPW * sizeof(*s->sdl_objs->pixels));
+    SDL_UpdateTexture(s->sdl_objs->texture, NULL, s->sdl_objs->pixels, DISPW * sizeof(*s->sdl_objs->pixels));
     SDL_RenderCopy(s->sdl_objs->renderer, s->sdl_objs->texture, NULL, NULL);
     SDL_RenderPresent(s->sdl_objs->renderer);
 
@@ -262,7 +255,8 @@ void draw_to_display(struct state* s)
 }
 
 struct state initialise_emulator(struct chip8_sys* chip8,
-                                 struct sdl_objs* sdl_objs, struct ops* op,
+                                 struct sdl_objs* sdl_objs,
+                                 struct ops* op,
                                  struct chip8_launch_data* data)
 {
     /* verify received arguements aren't NULL pointers */
@@ -319,17 +313,17 @@ void emulator(struct state* state)
         SDL_PollEvent(&event);
 
         switch (event.type) {
-        case SDL_QUIT:
-            state->run = FALSE;
-            break;
+            case SDL_QUIT:
+                state->run = FALSE;
+                break;
 
-        case SDL_KEYUP:
-            check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
-            break;
+            case SDL_KEYUP:
+                check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
+                break;
 
-        case SDL_KEYDOWN:
-            check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
-            break;
+            case SDL_KEYDOWN:
+                check_and_modify_keystate(SDL_GetKeyboardState(NULL), state);
+                break;
         }
 
         if (state->DrawFL)
@@ -352,12 +346,12 @@ void emulator(struct state* state)
 int main(int argc, char** argv)
 {
     static struct chip8_launch_data data = {.quirks = FALSE,
-                                     .yes_rom = FALSE,
-                                     .debugger = FALSE,
-                                     .rom_path = NULL,
-                                     .bg = 0x282c34ff,
-                                     .fg = 0x61afefff,
-                                     .frequency = 1000};
+                                            .yes_rom = FALSE,
+                                            .debugger = FALSE,
+                                            .rom_path = NULL,
+                                            .bg = 0x282c34ff,
+                                            .fg = 0x61afefff,
+                                            .frequency = 1000};
 
     /* argument parsing */
     if (argc < 2) {
@@ -365,7 +359,6 @@ int main(int argc, char** argv)
         return 0;
 
     } else {
-
         parse_argv(argc, (const char**)argv, &data);
         print_chip8_settings(&data);
         if (!data.yes_rom) {
@@ -376,30 +369,29 @@ int main(int argc, char** argv)
 
     /* initialise video*/
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        fprintf(stderr, RED "Could not init SDL Video: %s\n" RESET,
-                SDL_GetError());
+        fprintf(stderr, RED "Could not init SDL Video: %s\n" RESET, SDL_GetError());
         return BAD_RETURN_VALUE;
     }
 
     /* Initilaise the structures */
     static struct chip8_sys chip8 = {.memory = {
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-    }};
+                                         0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
+                                         0x20, 0x60, 0x20, 0x20, 0x70,  // 1
+                                         0xF0, 0x10, 0xF0, 0x80, 0xF0,  // 2
+                                         0xF0, 0x10, 0xF0, 0x10, 0xF0,  // 3
+                                         0x90, 0x90, 0xF0, 0x10, 0x10,  // 4
+                                         0xF0, 0x80, 0xF0, 0x10, 0xF0,  // 5
+                                         0xF0, 0x80, 0xF0, 0x90, 0xF0,  // 6
+                                         0xF0, 0x10, 0x20, 0x40, 0x40,  // 7
+                                         0xF0, 0x90, 0xF0, 0x90, 0xF0,  // 8
+                                         0xF0, 0x90, 0xF0, 0x10, 0xF0,  // 9
+                                         0xF0, 0x90, 0xF0, 0x90, 0x90,  // A
+                                         0xE0, 0x90, 0xE0, 0x90, 0xE0,  // B
+                                         0xF0, 0x80, 0x80, 0x80, 0xF0,  // C
+                                         0xE0, 0x90, 0x90, 0x90, 0xE0,  // D
+                                         0xF0, 0x80, 0xF0, 0x80, 0xF0,  // E
+                                         0xF0, 0x80, 0xF0, 0x80, 0x80   // F
+                                     }};
     static struct sdl_objs sdl_objs = {0};
     static struct ops op = {0};
 

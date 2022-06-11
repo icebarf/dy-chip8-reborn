@@ -1,5 +1,6 @@
+BasedOnStyle: Chromium
 IndentWidth: 4
-ColumnLimit: 80
+ColumnLimit: 120
 PointerAlignment: Left
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never

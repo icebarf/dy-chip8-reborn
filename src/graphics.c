@@ -2,8 +2,7 @@
 #include <SDL2/SDL_render.h>
 #include <stdint.h>
 
-struct sdl_objs create_window(const unsigned int height,
-                              const unsigned int width, const uint32_t bg)
+struct sdl_objs create_window(const unsigned int height, const unsigned int width, const uint32_t bg)
 {
     struct sdl_objs sdl_objs = {0};
 
@@ -12,34 +11,28 @@ struct sdl_objs create_window(const unsigned int height,
 
     /* Create window */
     sdl_objs.screen =
-        SDL_CreateWindow("Chip-8 Reborn", SDL_WINDOWPOS_CENTERED,
-                         SDL_WINDOWPOS_CENTERED, width, height, 0);
+        SDL_CreateWindow("Chip-8 Reborn", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
 
     if (sdl_objs.screen == NULL) {
-        fprintf(stderr, RED_2 "Could not create window: %s\n" RESET,
-                SDL_GetError());
+        fprintf(stderr, RED_2 "Could not create window: %s\n" RESET, SDL_GetError());
         exit(1);
     }
 
     /* Create renderer on window */
-    sdl_objs.renderer =
-        SDL_CreateRenderer(sdl_objs.screen, -1, SDL_RENDERER_SOFTWARE);
+    sdl_objs.renderer = SDL_CreateRenderer(sdl_objs.screen, -1, SDL_RENDERER_SOFTWARE);
 
     if (sdl_objs.renderer == NULL) {
-        fprintf(stderr, RED_2 "Could not create render: %s\n" RED_2,
-                SDL_GetError());
+        fprintf(stderr, RED_2 "Could not create render: %s\n" RED_2, SDL_GetError());
         exit(1);
     }
 
     if (SDL_SetRenderDrawColor(sdl_objs.renderer, 0, 0, 0, 1) < 0) {
-        fprintf(stderr, RED_2 "Could not set render color: %s\n" RESET,
-                SDL_GetError());
+        fprintf(stderr, RED_2 "Could not set render color: %s\n" RESET, SDL_GetError());
         exit(1);
     }
 
     if (SDL_RenderClear(sdl_objs.renderer) < 0) {
-        fprintf(stderr, RED_2 "Could not clear render on screen: %s\n" RESET,
-                SDL_GetError());
+        fprintf(stderr, RED_2 "Could not clear render on screen: %s\n" RESET, SDL_GetError());
         exit(1);
     }
 
@@ -47,12 +40,10 @@ struct sdl_objs create_window(const unsigned int height,
      * AGBR32 because We're on left endian machine so when setting pixels
      * we can simply write the hex of the color in RGBA format */
     sdl_objs.texture =
-        SDL_CreateTexture(sdl_objs.renderer, SDL_PIXELFORMAT_ABGR32,
-                          SDL_TEXTUREACCESS_STREAMING, DISPW, DISPH);
+        SDL_CreateTexture(sdl_objs.renderer, SDL_PIXELFORMAT_ABGR32, SDL_TEXTUREACCESS_STREAMING, DISPW, DISPH);
 
     if (sdl_objs.texture == NULL) {
-        fprintf(stderr, RED_2 "Could not create texture: %s\n" RESET,
-                SDL_GetError());
+        fprintf(stderr, RED_2 "Could not create texture: %s\n" RESET, SDL_GetError());
         exit(1);
     }
 
@@ -67,16 +58,13 @@ struct sdl_objs create_window(const unsigned int height,
 
     /* Update the texture and then copy the texture to renderer on window and
      * then present it */
-    if (SDL_UpdateTexture(sdl_objs.texture, NULL, pixels,
-                          DISPH * sizeof(*pixels))) {
-        fprintf(stderr, RED_2 "Couldn't update texture: %s\n" RESET,
-                SDL_GetError());
+    if (SDL_UpdateTexture(sdl_objs.texture, NULL, pixels, DISPH * sizeof(*pixels))) {
+        fprintf(stderr, RED_2 "Couldn't update texture: %s\n" RESET, SDL_GetError());
         exit(1);
     }
 
     if (SDL_RenderCopy(sdl_objs.renderer, sdl_objs.texture, NULL, NULL) < 0) {
-        fprintf(stderr, RED_2 "Couldn't copy texture to render: %s\n" RESET,
-                SDL_GetError());
+        fprintf(stderr, RED_2 "Couldn't copy texture to render: %s\n" RESET, SDL_GetError());
         exit(1);
     }
 

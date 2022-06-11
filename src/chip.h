@@ -104,8 +104,7 @@ struct chip8_launch_data {
 };
 
 /* define some popular escape sequences */
-/* visit https://github.com/dylanaraps/pure-bash-bible#text-colors for more
- * info*/
+/* visit https://github.com/dylanaraps/pure-bash-bible#text-colors for more info */
 // clang-format off
 #define RESET       "\033[m"
 

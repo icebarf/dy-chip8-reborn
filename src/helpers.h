@@ -1,9 +1,8 @@
 #ifndef REBORN_HELPERS_H
 #define REBORN_HELPERS_H
-#include "chip.h"
 #include <stddef.h>
+#include "chip.h"
 
-// clang-format on
 /* takes in a pointer to chip8 instance, returns the topmost value from stack,
  * decrements the  stacktop */
 uint16_t pop(struct chip8_sys* chip8);
@@ -22,8 +21,7 @@ void bad_arg(void);
 
 /* parses the options passed to the emulator and sets up the runtime structure
  */
-void parse_argv(const int argc, const char** argv,
-                struct chip8_launch_data* data);
+void parse_argv(const int argc, const char** argv, struct chip8_launch_data* data);
 
 /* prints out the chip8_launch_data structure to stdout */
 void print_chip8_settings(const struct chip8_launch_data* data);
